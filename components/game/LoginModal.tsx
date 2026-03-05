@@ -1,6 +1,8 @@
 'use client'
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '@/lib/supabase' // 1. อย่าลืม import supabase client
+import SuccessModal from './SuccessModal'
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,12 +11,14 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const initialFormState = {
-    username: '',
+    email: '', // 2. แนะนำให้ใช้ email ในการ login ผ่าน Auth จะง่ายที่สุดครับ
     password: ''
   }
 
   const [formData, setFormData] = useState(initialFormState)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false) // เพิ่มสถานะโหลด
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false)
 
   const handleClose = () => {
     setFormData(initialFormState)
@@ -28,18 +32,38 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (error) setError('')
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.username || !formData.password) {
-      setError('PLEASE ENTER BOTH USERNAME AND PASSWORD')
+    if (!formData.email || !formData.password) {
+      setError('PLEASE ENTER BOTH EMAIL AND PASSWORD')
       return
     }
-    console.log('Logging in...', formData)
-    alert('LOGIN SUCCESS!')
-    handleClose()
+
+    setLoading(true)
+    setError('')
+
+    try {
+      // 3. ใช้ Supabase Auth ในการล็อกอิน
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (authError) throw authError
+
+         setIsSuccessOpen(true); // ✅ เปิด Modal แจ้งเตือนแทนการใช้ alert
+      // ถ้าผ่าน ระบบจะเก็บ session ให้อัตโนมัติ
+
+    } catch (err: any) {
+      // แสดง error เช่น "Invalid login credentials"
+      setError(err.message.toUpperCase())
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
@@ -55,7 +79,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             exit={{ scale: 0.8, opacity: 0, y: 20 }}
             className="relative bg-white w-full max-w-[90%] sm:max-w-[28em] rounded-[2.5em] sm:rounded-[3em] border-[6px] sm:border-[8px] border-[#35A7FF] shadow-[0_15px_0_rgba(0,0,0,0.1)] overflow-y-auto max-h-[90vh] scrollbar-hide"
           >
-            {/* ✕ ปุ่มปิดแบบ Sticky มุมขวาบน */}
             <div className="sticky top-0 left-0 w-full z-[1001] pointer-events-none">
                 <button 
                   onClick={handleClose} 
@@ -70,8 +93,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 Login
               </h2>
 
-              {/* Social Login Buttons */}
               <div className="space-y-3 sm:space-y-4 px-1 sm:px-2 mb-6 sm:mb-8">
+                {/* 4. ใส่ Logic สำหรับ Google Login ทีหลังได้ครับ */}
                 <button type="button" className="w-full flex items-center justify-center gap-3 bg-white border-[3px] sm:border-[4px] border-[#EEEEEE] py-2.5 sm:py-3 rounded-full text-black font-bold text-sm sm:text-base shadow-[0_4px_0_#DDDDDD] active:translate-y-1 transition-all">
                   <img src="https://www.google.com/favicon.ico" className="w-5 h-5 sm:w-6 sm:h-6" alt="G" />
                   CONTINUE WITH GOOGLE
@@ -88,12 +111,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <div className="flex-1 h-1 bg-[#EEEEEE] rounded-full" />
               </div>
 
-              {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 px-1 sm:px-2">
-                <input name="username" type="text" placeholder="USERNAME" value={formData.username} onChange={handleInputChange} className="w-full bg-[#F5FBFF] border-[3px] sm:border-[4px] border-[#35A7FF] py-3 sm:py-4 px-6 sm:px-8 rounded-full text-black font-bold text-sm sm:text-base focus:outline-none" />
+                {/* เปลี่ยนเป็น type="email" และ name="email" ให้ตรงกับ Auth */}
+                <input name="email" type="email" placeholder="EMAIL ADDRESS" value={formData.email} onChange={handleInputChange} className="w-full bg-[#F5FBFF] border-[3px] sm:border-[4px] border-[#35A7FF] py-3 sm:py-4 px-6 sm:px-8 rounded-full text-black font-bold text-sm sm:text-base focus:outline-none" />
                 <input name="password" type="password" placeholder="PASSWORD" value={formData.password} onChange={handleInputChange} className="w-full bg-[#F5FBFF] border-[3px] sm:border-[4px] border-[#35A7FF] py-3 sm:py-4 px-6 sm:px-8 rounded-full text-black font-bold text-sm sm:text-base focus:outline-none" />
 
-                {/* 🔑 ปุ่ม Reset Password */}
                 <div className="flex justify-end px-2">
                   <button type="button" className="text-[#35A7FF] text-xs sm:text-sm font-black hover:underline uppercase">
                     Forgot Password?
@@ -103,8 +125,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 {error && <div className="text-red-500 font-black text-xs sm:text-sm animate-pulse">{error}</div>}
                 
                 <div className="flex justify-center mt-6">
-                  <button type="submit" className="w-full sm:w-[10em] bg-[#35A7FF] py-3 sm:py-4 rounded-full text-xl sm:text-3xl font-black text-white shadow-[0_6px_0_#288DE0] border-[3px] sm:border-4 border-white uppercase hover:brightness-105 active:translate-y-1 transition-all">
-                    LOGIN
+                  <button 
+                    disabled={loading}
+                    type="submit" 
+                    className="w-full sm:w-[10em] bg-[#35A7FF] py-3 sm:py-4 rounded-full text-xl sm:text-3xl font-black text-white shadow-[0_6px_0_#288DE0] border-[3px] sm:border-4 border-white uppercase hover:brightness-105 active:translate-y-1 transition-all disabled:opacity-50"
+                  >
+                    {loading ? '...' : 'LOGIN'}
                   </button>
                 </div>
               </form>
@@ -113,5 +139,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </div>
       )}
     </AnimatePresence>
+    <SuccessModal 
+        isOpen={isSuccessOpen} 
+        onClose={() => {
+          setIsSuccessOpen(false)
+          handleClose() // ปิดหน้า Login พร้อมกัน
+        }}
+        secretCode="WELCOME BACK!"
+        />
+    </>
   )
 }

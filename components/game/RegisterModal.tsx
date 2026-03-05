@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
+import SuccessModal from './SuccessModal'
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -17,8 +18,20 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     confirmPassword: ''
   }
 
+  // 1. เพิ่มฟังก์ชันสุ่ม String 6 หลัก (ตัวพิมพ์ใหญ่ + ตัวเลข)
+    const generateSecretCode = () => {
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+        return result;
+    };
+
   const [formData, setFormData] = useState(initialFormState)
   const [error, setError] = useState('')
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState('');
 
   // 2. ฟังก์ชันล้างข้อมูล
   const handleClose = () => {
@@ -48,52 +61,48 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     }
 
     try {
-      // 2. สมัครสมาชิกผ่าน Supabase Auth
-      // เราส่ง display_name เข้าไปใน metadata เพื่อให้ Trigger ใน Database ดึงไปใช้ได้
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            display_name: formData.username, 
-          }
-        }
-      })
+    const secretCode = generateSecretCode(); // ✨ สุ่มโค้ดผสมตัวอักษร เช่น "A7B9X2"
 
-      if (authError) throw authError
-
-      // 3. บันทึกข้อมูลลงตาราง 'users' ที่คุณสร้างไว้
-      // หมายเหตุ: หากคุณรัน SQL Trigger ใน Supabase แล้ว ส่วนนี้อาจไม่ต้องทำก็ได้ 
-      // แต่เขียนไว้เพื่อความชัวร์ว่าข้อมูล username จะถูกเก็บแน่นอน
-      if (data.user) {
-        const { error: dbError } = await supabase
-          .from('users')
-          .insert([
-            { 
-              user_id: data.user.id, // ใช้ user_id ตามชื่อคอลัมน์ในรูปของคุณ
-              username: formData.username, 
-              email: formData.email,
-              user_point: 0, // ค่าเริ่มต้นตามตาราง
-              high_score: 0  // ค่าเริ่มต้นตามตาราง
-            }
-          ])
-        
-        if (dbError) {
-           console.error("DB Insert Error:", dbError)
-           // หากสมัคร Auth สำเร็จแต่ DB พัง อาจจะแสดง Error ให้ผู้ใช้ทราบ
+    const { data, error: authError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          display_name: formData.username,
+          secret_code: secretCode // เก็บไว้ใน metadata ด้วยเพื่อความชัวร์
         }
       }
+    });
 
-      alert('SIGN UP SUCCESS! PLEASE CHECK YOUR EMAIL FOR VERIFICATION')
-      handleClose() 
+    if (authError) throw authError;
+
+    if (data.user) {
+      const { error: dbError } = await supabase
+        .from('users')
+        .insert([
+          { 
+            user_id: data.user.id, //
+            username: formData.username, 
+            email: formData.email,
+            secret_code: secretCode, // ✨ ส่งค่าผสมตัวอักษรเข้าคอลัมน์
+            user_point: 0,
+            high_score: 0
+          }
+        ]);
       
-    } catch (err: any) {
-      // แสดง Error จาก Supabase เช่น Email ซ้ำ หรือ Password สั้นไป
-      setError(err.message.toUpperCase())
+      if (dbError) throw dbError;
     }
+
+    setGeneratedCode(secretCode); // เก็บโค้ดไว้แสดง
+    setIsSuccessOpen(true);       // ✅ เปิด Modal แจ้งเตือนแทนการใช้ alert
+    
+  } catch (err: any) {
+    setError(err.message.toUpperCase());
   }
+};
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
@@ -157,5 +166,14 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         </div>
       )}
     </AnimatePresence>
+       <SuccessModal 
+      isOpen={isSuccessOpen} 
+      onClose={() => {
+        setIsSuccessOpen(false);
+        handleClose(); // ปิดหน้า Register ไปด้วยเลย
+      }}
+      secretCode={generatedCode}
+    />
+    </>
   )
 }
