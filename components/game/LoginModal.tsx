@@ -20,6 +20,21 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [loading, setLoading] = useState(false) // เพิ่มสถานะโหลด
   const [isSuccessOpen, setIsSuccessOpen] = useState(false)
 
+
+  // ✅ 1. ฟังก์ชัน Login ด้วย Google
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin, // กลับมาที่ localhost:3000
+        }
+      })
+      if (error) throw error
+    } catch (err: any) {
+      setError(err.message.toUpperCase())
+    }
+}
   const handleClose = () => {
     setFormData(initialFormState)
     setError('')
@@ -94,9 +109,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </h2>
 
               <div className="space-y-3 sm:space-y-4 px-1 sm:px-2 mb-6 sm:mb-8">
-                {/* 4. ใส่ Logic สำหรับ Google Login ทีหลังได้ครับ */}
-                <button type="button" className="w-full flex items-center justify-center gap-3 bg-white border-[3px] sm:border-[4px] border-[#EEEEEE] py-2.5 sm:py-3 rounded-full text-black font-bold text-sm sm:text-base shadow-[0_4px_0_#DDDDDD] active:translate-y-1 transition-all">
-                  <img src="https://www.google.com/favicon.ico" className="w-5 h-5 sm:w-6 sm:h-6" alt="G" />
+                {/* ✅ ผูกฟังก์ชัน Google */}
+                <button 
+                  onClick={handleGoogleLogin}
+                  type="button" 
+                  className="w-full flex items-center justify-center gap-3 bg-white border-[4px] border-[#EEEEEE] py-3 rounded-full text-black font-bold shadow-[0_4px_0_#DDDDDD] active:translate-y-1 transition-all"
+                >
+                  <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="G" />
                   CONTINUE WITH GOOGLE
                 </button>
                 <button type="button" className="w-full flex items-center justify-center gap-3 bg-[#1877F2] py-2.5 sm:py-3 rounded-full text-white font-bold text-sm sm:text-base shadow-[0_4px_0_#0C52AB] active:translate-y-1 transition-all">
