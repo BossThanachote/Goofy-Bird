@@ -5,8 +5,11 @@ import CurrencyBar from '@/components/game/CurrencyBar'
 import LoginModal from '@/components/game/LoginModal'
 import RegisterModal from '@/components/game/RegisterModal'
 import SettingsModal from '@/components/game/SettingsModal'
+import InventoryModal from '@/components/game/InventoryModal'
 import { Fredoka } from 'next/font/google'
 import { supabase } from '@/lib/supabase' // ✅ เพิ่มการนำเข้า supabase
+import ShopModal from '@/components/game/ShopModal'
+import { i } from 'framer-motion/client'
 
 const fredokaOne = Fredoka({ subsets: ['latin'], weight: '600' })
 
@@ -15,6 +18,9 @@ export default function LandingPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false)
+  const [isShopOpen, setIsShopOpen] = useState(false)
+  const [points, setPoints] = useState(0)
   
   // ✅ เพิ่ม State สำหรับจัดการข้อมูลผู้เล่น
   const [user, setUser] = useState<any>(null)
@@ -30,7 +36,7 @@ export default function LandingPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)
-        fetchUsername(session.user.id)
+        fetchUserData(session.user.id)
       }
     }
     checkUser()
@@ -39,10 +45,11 @@ export default function LandingPage() {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user)
-        fetchUsername(session.user.id)
+        fetchUserData(session.user.id)
       } else {
         setUser(null)
         setUsername('')
+        setPoints(0) // Reset เงินเมื่อ Logout
       }
     })
 
@@ -52,14 +59,17 @@ export default function LandingPage() {
     }
   }, [])
 
-  // 📝 ดึงชื่อ Username จากตาราง users
-  const fetchUsername = async (userId: string) => {
+  const fetchUserData = async (userId: string) => {
     const { data, error } = await supabase
       .from('users')
-      .select('username')
+      .select('username, user_point') // ✅ ดึงทั้งชื่อและเงิน
       .eq('user_id', userId)
       .single()
-    if (data) setUsername(data.username)
+    
+    if (data) {
+      setUsername(data.username)
+      setPoints(data.user_point || 0) // ✅ อัปเดตเงินในหน้า UI
+    }
   }
 
   // ฟังก์ชันดึงชื่อใหม่แบบแมนนวล (เราจะส่งตัวนี้ไปให้ Modal)
@@ -103,8 +113,8 @@ export default function LandingPage() {
         <div className="flex justify-between items-start w-full">
           <div className="flex flex-col gap-4">
             <motion.button onClick={() => setIsSettingsOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">⚙️</motion.button>
-            <motion.button whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">🎒</motion.button>
-            <motion.button whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">👥</motion.button>
+            <motion.button onClick={() => setIsInventoryOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">🎒</motion.button>
+            <motion.button  whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">👥</motion.button>
           </div>
 
           {/* 🔘 ส่วนเปลี่ยนปุ่ม Login/Register เป็น Hello ! */}
@@ -168,7 +178,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-6 sm:gap-[5em] w-full items-center justify-center">
               <motion.button className="bg-[#FF5F5F] w-[15em] sm:w-[13em] py-3 rounded-full text-xl font-bold shadow-[0_6px_0_#D14848] uppercase">Multiplayer</motion.button>
-              <motion.button className="bg-white text-[#35A7FF] w-[15em] sm:flex-1 py-3 rounded-full text-xl font-bold border-4 border-[#35A7FF] shadow-[0_6px_0_#35A7FF] uppercase">Shop</motion.button>
+              <motion.button onClick={() => setIsShopOpen(true)} className="bg-white text-[#35A7FF] w-[15em] sm:flex-1 py-3 rounded-full text-xl font-bold border-4 border-[#35A7FF] shadow-[0_6px_0_#35A7FF] uppercase">Shop</motion.button>
             </div>
 
             <motion.button className="bg-[#F1E4F3] text-[#E0A1FF] px-10 py-4 rounded-full font-bold text-2xl shadow-[0_5px_0_#E0A1FF] border-4 border-white uppercase">Leaderboard</motion.button>
@@ -176,13 +186,15 @@ export default function LandingPage() {
         </div>
 
         <div className="mt-auto pb-4 scale-90 sm:scale-100 origin-left">
-          <CurrencyBar amount="12,500" />
+          <CurrencyBar amount={points.toLocaleString()} />
         </div>
       </div>
 
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onUpdateSuccess={refreshUsername} />
+      <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} user={user} />
+      <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} user={user} />
     </div>
   )
 }

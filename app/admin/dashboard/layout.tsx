@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Bird, Package, Map as MapIcon, Store, LogOut, ShieldCheck, Languages } from 'lucide-react'
+// ✅ 1. เพิ่ม Trash2 icon
+import { Bird, Package, Map as MapIcon, Store, LogOut, ShieldCheck, Languages, Trash2 } from 'lucide-react'
 
-// 📖 1. Dictionary สำหรับเก็บคำแปลทั้งหมดใน Layout
+// 📖 2. เพิ่มคำแปล Recycle Bin
 const translations = {
   EN: {
     system_status: 'System Online',
@@ -13,6 +14,7 @@ const translations = {
     items: 'Items',
     maps: 'Maps',
     shop: 'Shop',
+    recycle_bin: 'Recycle Bin', // 👈 เพิ่มตรงนี้
     sign_out: 'Sign Out',
     admin_level: 'Super Admin'
   },
@@ -23,6 +25,7 @@ const translations = {
     items: 'ไอเทม',
     maps: 'ด่าน/แผนที่',
     shop: 'ร้านค้า',
+    recycle_bin: 'ถังขยะ', // 👈 เพิ่มตรงนี้
     sign_out: 'ออกจากระบบ',
     admin_level: 'ผู้ดูแลระบบสูงสุด'
   }
@@ -32,30 +35,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const pathname = usePathname()
   
-  // 🔄 2. State สำหรับคุมภาษา (ดึงค่าเริ่มต้นจากเครื่องหรือ Default เป็น EN)
   const [lang, setLang] = useState<'EN' | 'TH'>('EN')
-  const t = translations[lang] // ตัวแปรลัดสำหรับเรียกใช้คำแปล
+  const t = translations[lang] 
 
   useEffect(() => {
     const isAdmin = localStorage.getItem('isAdmin')
     if (isAdmin !== 'true') router.push('/admin')
+
+    // โหลดภาษาเริ่มต้น
+    const savedLang = localStorage.getItem('appLang') as 'EN' | 'TH'
+    if (savedLang) setLang(savedLang)
   }, [router])
 
+  // 📝 3. เพิ่มเมนูถังขยะลงใน Sidebar
   const menuItems = [
     { id: 'characters', label: t.characters, path: '/admin/dashboard/characters', icon: <Bird size={20} /> },
     { id: 'items', label: t.items, path: '/admin/dashboard/items', icon: <Package size={20} /> },
     { id: 'maps', label: t.maps, path: '/admin/dashboard/maps', icon: <MapIcon size={20} /> },
     { id: 'shop', label: t.shop, path: '/admin/dashboard/shop', icon: <Store size={20} /> },
+    { id: 'trash', label: t.recycle_bin, path: '/admin/dashboard/trash', icon: <Trash2 size={20} /> }, // 👈 เพิ่มบรรทัดนี้
   ]
 
-  // ใน layout.tsx ตรงฟังก์ชันสลับภาษา
-const toggleLang = () => {
-  const newLang = lang === 'EN' ? 'TH' : 'EN'
-  setLang(newLang)
-  localStorage.setItem('appLang', newLang)
-  // ยิง Event เพื่อบอกหน้า page.tsx ให้รู้ตัว
-  window.dispatchEvent(new Event('storage')) 
-}
+  const toggleLang = () => {
+    const newLang = lang === 'EN' ? 'TH' : 'EN'
+    setLang(newLang)
+    localStorage.setItem('appLang', newLang)
+    window.dispatchEvent(new Event('storage')) 
+  }
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
@@ -77,7 +83,7 @@ const toggleLang = () => {
               onClick={() => router.push(item.path)}
               className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all ${
                 pathname === item.path ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'
-              }`}
+              } ${item.id === 'trash' ? 'mt-4 border border-slate-700/50' : ''}`} // 👈 พิเศษ: แยกถังขยะให้ห่างออกมานิดนึง
             >
               {item.icon}
               <span className="text-sm uppercase tracking-wide">{item.label}</span>
@@ -100,7 +106,6 @@ const toggleLang = () => {
           </div>
           
           <div className="flex items-center gap-8">
-            {/* 🔄 ปุ่ม Toggle ภาษาที่คุมตัวแปร t ทั่งหน้า */}
             <button
               onClick={toggleLang}
               className="relative flex items-center bg-slate-100 border-2 border-slate-200 rounded-full p-1 w-20 h-10 hover:border-blue-400 transition-all shadow-inner"
@@ -129,7 +134,6 @@ const toggleLang = () => {
         </header>
 
         <main className="p-10 flex-1">
-          {/* ส่งค่า lang หรือตัวแปล t ไปยังหน้าลูกๆ ผ่าน context หรือ props ได้ถ้าต้องการครับ */}
           {children}
         </main>
       </div>
