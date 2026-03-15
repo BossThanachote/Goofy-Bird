@@ -67,27 +67,33 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     setLoading(true)
 
     try {
-      // 🔍 2. Pre-check: ตรวจสอบ Username ซ้ำในตาราง users ก่อนสมัครจริง
-      const { data: existingUser, error: checkError } = await supabase
-        .from('users')
-        .select('username')
-        .eq('username', formData.username)
-        .maybeSingle()
+      // 🎲 2. สุ่ม Tag 4 หลัก และเช็คว่าการจับคู่ ชื่อ+Tag นี้ซ้ำไหม
+      let randomTag = Math.floor(1000 + Math.random() * 9000).toString()
+      let isUnique = false
 
-      if (existingUser) {
-        setError(`USERNAME "${formData.username.toUpperCase()}" IS ALREADY TAKEN!`)
-        setLoading(false)
-        return
+      while (!isUnique) {
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('user_id')
+          .eq('username', formData.username)
+          .eq('user_tag', randomTag)
+          .maybeSingle()
+
+        if (!existingUser) {
+          isUnique = true // รอด! ไม่มีคนใช้ชื่อและ Tag คู่นี้
+        } else {
+          randomTag = Math.floor(1000 + Math.random() * 9000).toString() // สุ่มใหม่ถ้าแจ็คพอตไปซ้ำคนอื่น
+        }
       }
 
-      // 🚀 3. สมัครสมาชิกผ่าน Supabase Auth
-      // ขั้นตอนนี้ Trigger หลังบ้านจะสร้าง Profile ในตาราง users ให้อัตโนมัติ
+      // 🚀 3. สมัครสมาชิกผ่าน Supabase Auth (แนบ user_tag ไปกับ metadata ด้วย)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
-            display_name: formData.username 
+            display_name: formData.username,
+            user_tag: randomTag // ส่งข้อมูลนี้เผื่อ Trigger หลังบ้านเอาไปใช้ได้
           }
         }
       })
@@ -101,16 +107,16 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         return
       }
 
-      // 🔄 4. ดึง Secret Code ที่ Trigger เจนให้จาก Database มาโชว์
+      // 🔄 4. รอ Trigger หลังบ้านสร้าง Profile ให้เสร็จ
       let retryCount = 0
       let profileData = null
 
-      while (retryCount < 5 && !profileData) {
+      while (retryCount < 10 && !profileData) {
         const { data } = await supabase
           .from('users')
-          .select('secret_code')
+          .select('secret_code, user_tag')
           .eq('user_id', authData.user?.id)
-          .single()
+          .maybeSingle()
         
         if (data) {
           profileData = data
@@ -120,13 +126,20 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         }
       }
 
+      // ✅ 5. อัปเดต user_tag ลง Database (ในกรณีที่ Trigger สมัครสมาชิกไม่ได้จัดการให้)
+      if (profileData && !profileData.user_tag) {
+        await supabase
+          .from('users')
+          .update({ user_tag: randomTag })
+          .eq('user_id', authData.user?.id)
+      }
+
       setGeneratedCode(profileData?.secret_code || 'CHECK SETTINGS')
       setIsSuccessOpen(true)
       
     } catch (err: any) {
-      // ดักจับ Error อื่นๆ จาก Database
       if (err.message.includes('unique constraint')) {
-        setError('USERNAME OR EMAIL ALREADY TAKEN!')
+        setError('DATABASE ERROR: PLEASE TRY AGAIN')
       } else {
         setError(err.message.toUpperCase())
       }

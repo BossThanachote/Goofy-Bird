@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Fredoka } from "next/font/google"; // เปลี่ยนจาก Geist เป็น Fredoka
-import "../globals.css";
+import "./globals.css";
 
 // ตั้งค่าฟอนต์ Fredoka
 const fredoka = Fredoka({
