@@ -15,7 +15,7 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [newUsername, setNewUsername] = useState('')
-  const [showSecret, setShowSecret] = useState(false) // ✅ State สำหรับ ซ่อน/โชว์รหัส
+  const [showSecret, setShowSecret] = useState(false) 
 
   useEffect(() => {
     if (isOpen) {
@@ -28,16 +28,17 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        // ✅ ดึง user_tag มาด้วย (บอสเขียนไว้ถูกแล้วครับ!)
         const { data, error } = await supabase
           .from('users')
-          .select('username, email, user_id, secret_code')
+          .select('username, email, user_id, user_tag, secret_code')
           .eq('user_id', user.id)
           .single()
 
         if (error) throw error
         setProfile(data)
       } else {
-        setProfile(null) // กรณีไม่ได้ Login
+        setProfile(null) 
       }
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -60,7 +61,6 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
       setProfile({ ...profile, username: newUsername })
       setIsEditing(false)
       if (onUpdateSuccess) onUpdateSuccess()
-      // ✅ ลบ alert ออกตามคำขอของบอส
     } catch (err: any) {
       alert(err.message.toUpperCase())
     } finally {
@@ -97,12 +97,10 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
             exit={{ scale: 0.8, opacity: 0 }}
             className="relative bg-gradient-to-b from-[#E0C3FC] to-[#8EC5FC] w-full max-w-[32em] rounded-[3em] border-[8px] border-white p-8 sm:p-10 shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-hide"
           >
-            {/* ❌ Close Button */}
             <button onClick={handleClose} className="absolute right-4 top-4 bg-[#FF5F5F] text-white w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-lg hover:scale-110 transition-transform font-bold text-2xl z-50">✕</button>
 
             <h2 className="text-4xl sm:text-5xl font-black text-[#35A7FF] mb-8 uppercase tracking-tighter drop-shadow-[0_2px_0_white] text-center">Settings</h2>
 
-            {/* 📑 Tabs */}
             <div className="flex justify-between gap-2 mb-8 bg-black/10 p-2 rounded-full">
               {['Controls', 'Sound', 'Account'].map((tab) => (
                 <button
@@ -121,7 +119,6 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                   <div className="text-center py-10 font-black text-[#35A7FF] animate-pulse italic">LOADING...</div>
                 ) : (
                   <>
-                    {/* Username Field */}
                     <div className="flex items-center justify-between bg-white/80 p-4 rounded-[2em] border-2 border-[#35A7FF]/30 min-h-[72px]">
                       <span className="font-black text-[#35A7FF]">User Name</span>
                       {isEditing ? (
@@ -136,8 +133,14 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-gray-600">{profile?.username || 'Guest'}</span>
-                          {/* ✅ โชว์ปุ่มแก้เฉพาะตอน Login แล้ว */}
+                          {/* ✅ โชว์ชื่อ พร้อม Tag สีเทาๆ ห้อยท้าย */}
+                          <span className="font-bold text-gray-600">
+                            {profile?.username || 'Guest'}
+                            <span className="text-gray-400 text-sm ml-1">
+                              #{profile?.user_tag || '0000'}
+                            </span>
+                          </span>
+                          
                           {profile && (
                             <button onClick={() => {setNewUsername(profile.username); setIsEditing(true)}} className="text-[#35A7FF] hover:scale-110 transition-transform">✏️</button>
                           )}
@@ -145,26 +148,22 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                       )}
                     </div>
 
-                    {/* User ID Field */}
                     <div className="flex items-center justify-between bg-white/80 p-4 rounded-[2em] border-2 border-[#35A7FF]/30 text-sm">
                       <span className="font-black text-[#35A7FF]">User ID</span>
                       <span className="font-mono text-gray-500 italic">{profile?.user_id ? `ID: ${profile.user_id.slice(0, 8)}...` : 'N/A'}</span>
                     </div>
 
-                    {/* Email Field */}
                     <div className="flex items-center justify-between bg-white/80 p-4 rounded-[2em] border-2 border-[#35A7FF]/30 overflow-hidden">
                       <span className="font-black text-[#35A7FF]">Email</span>
                       <span className="font-bold text-gray-500 truncate ml-4 italic">{profile?.email || 'No email found'}</span>
                     </div>
 
-                    {/* Recovery Key Field */}
                     <div className="flex items-center justify-between bg-white/80 p-4 rounded-[2em] border-2 border-[#35A7FF]/30">
                       <span className="font-black text-[#35A7FF]">Recovery Key</span>
                       <div className="flex items-center gap-2">
                          <span className="font-mono font-bold text-[#4ECB71] tracking-widest bg-white px-3 py-1 rounded-lg border border-[#4ECB71]/20 shadow-sm">
                             {showSecret ? (profile?.secret_code || '------') : '******'}
                          </span>
-                         {/* ✅ ปุ่มสลับ ซ่อน/โชว์ */}
                          {profile && (
                             <button onClick={() => setShowSecret(!showSecret)} className="text-[#35A7FF] text-lg hover:scale-110 transition-all">
                               {showSecret ? '👁️‍🗨️' : '👁️'}
@@ -173,7 +172,6 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                       </div>
                     </div>
 
-                    {/* ✅ โชว์ปุ่ม Logout เฉพาะตอน Login แล้ว */}
                     {profile && (
                       <div className="pt-6 border-t-4 border-white/30">
                         <button onClick={handleLogout} className="w-full bg-[#FF5F5F] py-4 rounded-full text-2xl font-black text-white shadow-[0_6px_0_#D14848] border-4 border-white uppercase hover:brightness-110 active:translate-y-1 active:shadow-none transition-all">

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import CurrencyBar from '@/components/game/CurrencyBar'
 import LoginModal from '@/components/game/LoginModal'
@@ -9,11 +10,14 @@ import InventoryModal from '@/components/game/InventoryModal'
 import { Fredoka } from 'next/font/google'
 import { supabase } from '@/lib/supabase' // ✅ เพิ่มการนำเข้า supabase
 import ShopModal from '@/components/game/ShopModal'
-import { i } from 'framer-motion/client'
+import LeaderboardModal from '@/components/game/LeaderBoardModal'
+import FriendModal from '@/components/game/FriendModal'
+
 
 const fredokaOne = Fredoka({ subsets: ['latin'], weight: '600' })
 
 export default function LandingPage() {
+  const router = useRouter()
   const [windowWidth, setWindowWidth] = useState(0)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
@@ -21,6 +25,8 @@ export default function LandingPage() {
   const [isInventoryOpen, setIsInventoryOpen] = useState(false)
   const [isShopOpen, setIsShopOpen] = useState(false)
   const [points, setPoints] = useState(0)
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
+  const [isFriendModalOpen, setIsFriendModalOpen] = useState(false)
   
   // ✅ เพิ่ม State สำหรับจัดการข้อมูลผู้เล่น
   const [user, setUser] = useState<any>(null)
@@ -110,11 +116,11 @@ export default function LandingPage() {
       </div>
 
       <div className="relative z-10 flex flex-col h-screen w-full p-6">
-        <div className="flex justify-between items-start w-full">
+        <div className="flex justify-between items-start w-full relative z-50">
           <div className="flex flex-col gap-4">
             <motion.button onClick={() => setIsSettingsOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">⚙️</motion.button>
             <motion.button onClick={() => setIsInventoryOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">🎒</motion.button>
-            <motion.button  whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">👥</motion.button>
+            <motion.button onClick={() => setIsFriendModalOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">👥</motion.button>
           </div>
 
           {/* 🔘 ส่วนเปลี่ยนปุ่ม Login/Register เป็น Hello ! */}
@@ -170,6 +176,7 @@ export default function LandingPage() {
 
           <div className="space-y-6 sm:space-y-10 w-full sm:w-[40em] px-6 items-center justify-center flex flex-col">
             <motion.button 
+              onClick={() => router.push('/play')}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               className="w-[10em] bg-[#35A7FF] py-4 rounded-full text-3xl font-black shadow-[0_8px_0_#288DE0] border-4 border-white uppercase"
             >
@@ -181,7 +188,7 @@ export default function LandingPage() {
               <motion.button onClick={() => setIsShopOpen(true)} className="bg-white text-[#35A7FF] w-[15em] sm:flex-1 py-3 rounded-full text-xl font-bold border-4 border-[#35A7FF] shadow-[0_6px_0_#35A7FF] uppercase">Shop</motion.button>
             </div>
 
-            <motion.button className="bg-[#F1E4F3] text-[#E0A1FF] px-10 py-4 rounded-full font-bold text-2xl shadow-[0_5px_0_#E0A1FF] border-4 border-white uppercase">Leaderboard</motion.button>
+            <motion.button onClick={() => setIsLeaderboardOpen(true)} className="bg-[#F1E4F3] text-[#E0A1FF] px-10 py-4 rounded-full font-bold text-2xl shadow-[0_5px_0_#E0A1FF] border-4 border-white uppercase">Leaderboard</motion.button>
           </div>
         </div>
 
@@ -195,6 +202,8 @@ export default function LandingPage() {
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onUpdateSuccess={refreshUsername} />
       <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} user={user} />
       <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} user={user} />
+      <FriendModal isOpen={isFriendModalOpen} onClose={() => setIsFriendModalOpen(false)} currentUser={user} />
+      <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
     </div>
   )
 }
