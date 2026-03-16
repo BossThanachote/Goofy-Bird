@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 // ✅ 1. เพิ่ม UserMinus เข้ามาสำหรับปุ่มยกเลิกคำขอ
 import { X, UserPlus, UserMinus, Users, Bell, Search, Check, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useSFX } from '@/hook/useSFX'
 
 interface FriendModalProps {
   isOpen: boolean
@@ -20,6 +21,7 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
   const [requestsList, setRequestsList] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
+  const { playHover, playClick } = useSFX()
   
   // ✅ 2. เพิ่ม State สำหรับเก็บสถานะความสัมพันธ์ทั้งหมด
   const [connections, setConnections] = useState<Record<string, { id: string, status: string, isSender: boolean }>>({})
@@ -156,7 +158,13 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
 
           <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} className="relative bg-[#F8FAFC] w-full max-w-2xl rounded-[3em] shadow-2xl p-6 md:p-8 border-[6px] border-[#35A7FF] flex flex-col max-h-[85vh]">
 
-            <button onClick={onClose} className="absolute top-6 right-6 p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm z-10"><X size={24} /></button>
+            <button 
+            onClick={() => {
+              playClick()
+              onClose()
+            }} 
+            onMouseEnter={playHover}
+            className="absolute top-6 right-6 p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm z-10 cursor-pointer"><X size={24} /></button>
 
             <div className="text-center mb-6">
               <h2 className="text-4xl font-black text-[#35A7FF] uppercase italic tracking-tighter drop-shadow-sm flex items-center justify-center gap-3">
@@ -165,9 +173,19 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
             </div>
 
             <div className="flex justify-center gap-2 mb-6 bg-slate-100 p-2 rounded-full border-2 border-slate-200">
-              <button onClick={() => setActiveTab('list')} className={`flex-1 py-3 rounded-full font-black text-xs uppercase transition-all flex items-center justify-center gap-2 ${activeTab === 'list' ? 'bg-[#35A7FF] text-white shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}><Users size={16} /> My Friends</button>
-              <button onClick={() => setActiveTab('add')} className={`flex-1 py-3 rounded-full font-black text-xs uppercase transition-all flex items-center justify-center gap-2 ${activeTab === 'add' ? 'bg-green-500 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}><UserPlus size={16} /> Add Friend</button>
-              <button onClick={() => setActiveTab('requests')} className={`relative flex-1 py-3 rounded-full font-black text-xs uppercase transition-all flex items-center justify-center gap-2 ${activeTab === 'requests' ? 'bg-yellow-500 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}>
+              <button onClick={() => {
+                playClick()
+                setActiveTab('list')
+              }} 
+              className={`flex-1 py-3 rounded-full font-black text-xs uppercase transition-all flex items-center justify-center gap-2 ${activeTab === 'list' ? 'bg-[#35A7FF] text-white shadow-md' : 'text-slate-400 hover:bg-slate-200 cursor-pointer'}`}><Users size={16} /> My Friends</button>
+              <button onClick={() => {
+                playClick()
+                setActiveTab('add')
+              }} className={`flex-1 py-3 rounded-full font-black text-xs uppercase transition-all flex items-center justify-center gap-2 ${activeTab === 'add' ? 'bg-green-500 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200 cursor-pointer'}`}><UserPlus size={16} /> Add Friend</button>
+              <button onClick={() => {
+                playClick()
+                setActiveTab('requests')
+              }} className={`relative flex-1 py-3 rounded-full font-black text-xs uppercase transition-all flex items-center justify-center gap-2 ${activeTab === 'requests' ? 'bg-yellow-500 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200 cursor-pointer'}`}>
                 <Bell size={16} /> Requests
                 {requestsList.length > 0 && <span className="absolute top-2 right-4 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-white"></span>}
               </button>
@@ -206,7 +224,10 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
                       value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                       className="flex-1 bg-slate-50 text-slate-800 border-2 border-slate-200 rounded-full px-6 py-3 font-bold focus:border-[#35A7FF] outline-none"
                     />
-                    <button type="submit" className="bg-[#35A7FF] text-white px-6 rounded-full font-black shadow-md hover:scale-105 transition-all"><Search size={20} /></button>
+                    <button 
+                    onClick={()=> playClick()}
+                    onMouseEnter={playHover}
+                    type="submit" className="bg-[#35A7FF] text-white px-6 rounded-full font-black shadow-md hover:scale-105 transition-all cursor-pointer"><Search size={20} /></button>
                   </form>
 
                   <div className="space-y-3">
@@ -226,7 +247,13 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
                               {/* ✅ 5. สลับปุ่มตามสถานะ */}
                               {!connection ? (
                                 // ยังไม่เคยแอด -> ปุ่มเขียว (+)
-                                <button onClick={() => sendRequest(user.user_id)} className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-md transition-all">
+                                <button 
+                                onClick={() => {
+                                  playClick()
+                                  sendRequest(user.user_id)
+                                }}
+                                onMouseEnter={playHover}
+                                className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-md transition-all">
                                   <UserPlus size={18} />
                                 </button>
                               ) : connection.status === 'accepted' ? (
@@ -236,7 +263,13 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
                                 </button>
                               ) : connection.isSender ? (
                                 // ส่งคำขอไปแล้ว (รอเขารับ) -> ปุ่มแดง (-) เพื่อยกเลิก
-                                <button onClick={() => cancelRequest(connection.id)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-all">
+                                <button 
+                                onClick={() => {
+                                  playClick()
+                                  cancelRequest(connection.id)
+                                }}
+                                onMouseEnter={playHover}
+                                className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-all">
                                   <UserMinus size={18} />
                                 </button>
                               ) : (
@@ -283,4 +316,4 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
       )}
     </AnimatePresence>
   )
-}
+} 

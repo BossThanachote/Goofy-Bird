@@ -13,6 +13,7 @@ import ShopModal from '@/components/game/ShopModal'
 import LeaderboardModal from '@/components/game/LeaderBoardModal'
 import FriendModal from '@/components/game/FriendModal'
 import BGMPlayer from '@/components/BGMPlayer'
+import { useSFX } from '@/hook/useSFX'
 
 
 const fredokaOne = Fredoka({ subsets: ['latin'], weight: '600' })
@@ -28,6 +29,7 @@ export default function LandingPage() {
   const [points, setPoints] = useState(0)
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false)
+  const { playHover, playClick, playBack } = useSFX()
   
   // ✅ เพิ่ม State สำหรับจัดการข้อมูลผู้เล่น
   const [user, setUser] = useState<any>(null)
@@ -99,7 +101,7 @@ export default function LandingPage() {
   if (windowWidth === 0) return <div className="min-h-screen bg-[#D0F4FF]" />
 
   return (
-    <div className={`${fredokaOne.className} relative min-h-screen w-full overflow-hidden text-white`}>
+    <div className={`${fredokaOne.className} relative min-h-screen w-full overflow-hidden text-white select-none`}>
       {/* ... (แอนิเมชัน Background เหมือนเดิมของบอส) ... */}
       <div className="absolute inset-0 z-0 flex w-[200vw]">
         <motion.div
@@ -119,9 +121,9 @@ export default function LandingPage() {
       <div className="relative z-10 flex flex-col h-screen w-full p-6">
         <div className="flex justify-between items-start w-full relative z-50">
           <div className="flex flex-col gap-4">
-            <motion.button onClick={() => setIsSettingsOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">⚙️</motion.button>
-            <motion.button onClick={() => setIsInventoryOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">🎒</motion.button>
-            <motion.button onClick={() => setIsFriendModalOpen(true)} whileHover={{ scale: 1.1 }} className="text-4xl filter drop-shadow-md">👥</motion.button>
+            <motion.button onClick={() => { setIsSettingsOpen(true); playClick(); }} whileHover={{ scale: 1.1 }} onMouseEnter={playHover} className="text-4xl filter drop-shadow-md cursor-pointer">⚙️</motion.button>
+            <motion.button onClick={() => { setIsInventoryOpen(true); playClick(); }} whileHover={{ scale: 1.1 }} onMouseEnter={playHover} className="text-4xl filter drop-shadow-md cursor-pointer">🎒</motion.button>
+            <motion.button onClick={() => { setIsFriendModalOpen(true); playClick(); }} whileHover={{ scale: 1.1 }} onMouseEnter={playHover} className="text-4xl filter drop-shadow-md cursor-pointer">👥</motion.button>
           </div>
 
           {/* 🔘 ส่วนเปลี่ยนปุ่ม Login/Register เป็น Hello ! */}
@@ -139,18 +141,20 @@ export default function LandingPage() {
               // ❌ ถ้ายังไม่ได้ Login: โชว์ปุ่มเดิม
               <>
                 <motion.button 
-                  onClick={() => setIsLoginOpen(true)}
+                  onClick={() => { setIsLoginOpen(true); playClick(); }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-[#35A7FF] px-8 py-2 rounded-full font-bold shadow-[0_5px_0_#288DE0] border-2 border-white/50"
+                  onMouseEnter={playHover}
+                  className="bg-[#35A7FF] px-8 py-2 rounded-full font-bold shadow-[0_5px_0_#288DE0] border-2 border-white/50 cursor-pointer"
                 >
                   LOGIN
                 </motion.button>
                 <motion.button 
-                  onClick={() => setIsRegisterOpen(true)}
+                  onClick={() => { setIsRegisterOpen(true); playClick(); }}
                   whileHover={{ scale: 1.02 }} 
-                  whileTap={{ scale: 0.98 }} 
-                  className="bg-[#FFD151] px-8 py-2 rounded-full font-bold shadow-[0_5px_0_#A37B00] text-white border-2 border-white/50"
+                  whileTap={{ scale: 0.98 }}
+                  onMouseEnter={playHover} 
+                  className="bg-[#FFD151] px-8 py-2 rounded-full font-bold shadow-[0_5px_0_#A37B00] text-white border-2 border-white/50 cursor-pointer"
                 >
                   REGISTER
                 </motion.button>
@@ -177,19 +181,31 @@ export default function LandingPage() {
 
           <div className="space-y-6 sm:space-y-10 w-full sm:w-[40em] px-6 items-center justify-center flex flex-col">
             <motion.button 
-              onClick={() => router.push('/play')}
+              onClick={() => { router.push('/play'); playClick(); }}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              className="w-[10em] bg-[#35A7FF] py-4 rounded-full text-3xl font-black shadow-[0_8px_0_#288DE0] border-4 border-white uppercase"
+              onMouseEnter={playHover}
+              className="w-[10em] bg-[#35A7FF] py-4 rounded-full text-3xl font-black shadow-[0_8px_0_#288DE0] border-4 border-white uppercase cursor-pointer"
             >
               START GAME
             </motion.button>
 
             <div className="flex flex-col sm:flex-row gap-6 sm:gap-[5em] w-full items-center justify-center">
-              <motion.button className="bg-[#FF5F5F] w-[15em] sm:w-[13em] py-3 rounded-full text-xl font-bold shadow-[0_6px_0_#D14848] uppercase">Multiplayer</motion.button>
-              <motion.button onClick={() => setIsShopOpen(true)} className="bg-white text-[#35A7FF] w-[15em] sm:flex-1 py-3 rounded-full text-xl font-bold border-4 border-[#35A7FF] shadow-[0_6px_0_#35A7FF] uppercase">Shop</motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onMouseEnter={playHover}
+                className="bg-[#FF5F5F] w-[15em] sm:w-[13em] py-3 rounded-full text-xl font-bold shadow-[0_6px_0_#D14848] uppercase cursor-pointer">Multiplayer</motion.button>
+              <motion.button 
+                onClick={() => { setIsShopOpen(true); playClick(); }}
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onMouseEnter={playHover}
+                className="bg-white text-[#35A7FF] w-[15em] sm:flex-1 py-3 rounded-full text-xl font-bold border-4 border-[#35A7FF] shadow-[0_6px_0_#35A7FF] uppercase cursor-pointer">Shop</motion.button>
             </div>
 
-            <motion.button onClick={() => setIsLeaderboardOpen(true)} className="bg-[#F1E4F3] text-[#E0A1FF] px-10 py-4 rounded-full font-bold text-2xl shadow-[0_5px_0_#E0A1FF] border-4 border-white uppercase">Leaderboard</motion.button>
+            <motion.button 
+              onClick={() => { setIsLeaderboardOpen(true); playClick(); }}
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              onMouseEnter={playHover}
+              className="bg-[#F1E4F3] text-[#E0A1FF] px-10 py-4 rounded-full font-bold text-2xl shadow-[0_5px_0_#E0A1FF] border-4 border-white uppercase cursor-pointer">Leaderboard</motion.button>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import SuccessModal from './SuccessModal'
+import { useSFX } from '@/hook/useSFX'
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [loading, setLoading] = useState(false)
   const [isSuccessOpen, setIsSuccessOpen] = useState(false)
   const [generatedCode, setGeneratedCode] = useState('')
+  const { playHover, playClick } = useSFX()
 
   // ✅ ฟังก์ชันตรวจสอบรูปแบบ Email ที่ถูกต้อง
   const validateEmail = (email: string) => {
@@ -173,17 +175,40 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             exit={{ scale: 0.8, opacity: 0, y: 20 }}
             className="relative bg-white w-full max-w-[90%] sm:max-w-[28em] rounded-[2.5em] sm:rounded-[3em] border-[8px] border-[#35A7FF] shadow-[0_15px_0_rgba(0,0,0,0.1)] overflow-y-auto max-h-[90vh] scrollbar-hide"
           >
-            <button onClick={handleClose} className="absolute right-6 top-6 text-[#35A7FF] text-2xl font-black hover:scale-125 transition-transform z-50">✕</button>
+            <button 
+              onClick={() => {
+                playClick()
+                handleClose()
+              }}
+              onMouseEnter={playHover}
+              className="absolute right-4 top-4 sm:right-6 sm:top-6 pointer-events-auto text-[#35A7FF] text-xl sm:text-2xl font-black hover:scale-125 transition-transform bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shadow-md border-2 border-[#35A7FF]/20 cursor-pointer"
+            >
+              ✕
+            </button>
 
             <div className="px-6 sm:px-10 py-10 sm:py-14 text-center">
               <h2 className="text-5xl sm:text-6xl font-black text-[#35A7FF] mb-10 uppercase tracking-tighter">Register</h2>
 
               {/* Social Buttons */}
               <div className="space-y-4 mb-8">
-                <button onClick={() => handleSocialLogin('google')} className="w-full flex items-center justify-center gap-3 bg-white border-[4px] border-[#EEEEEE] py-3 rounded-full text-black font-bold shadow-[0_4px_0_#DDDDDD] active:translate-y-1 transition-all">
+                <button 
+                  onClick={() => {
+                    playClick()
+                    handleSocialLogin('google')
+                  }}
+                  onMouseEnter={playHover}
+                  className="w-full flex items-center justify-center gap-3 bg-white border-[4px] border-[#EEEEEE] py-3 rounded-full text-black font-bold shadow-[0_4px_0_#DDDDDD] active:translate-y-1 transition-all cursor-pointer"
+                >
                   <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="G" /> SIGN UP WITH GOOGLE
                 </button>
-                <button onClick={() => handleSocialLogin('facebook')} className="w-full flex items-center justify-center gap-3 bg-[#1877F2] py-3 rounded-full text-white font-bold shadow-[0_4px_0_#0C52AB] active:translate-y-1 transition-all">
+                <button 
+                  onClick={() => {
+                    playClick()
+                    handleSocialLogin('facebook')
+                  }}
+                  onMouseEnter={playHover}
+                  className="w-full flex items-center justify-center gap-3 bg-[#1877F2] py-3 rounded-full text-white font-bold shadow-[0_4px_0_#0C52AB] active:translate-y-1 transition-all cursor-pointer"
+                >
                   <span className="text-2xl font-black">f</span> SIGN UP WITH FACEBOOK
                 </button>
               </div>
@@ -201,7 +226,12 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
                 {error && <div className="text-red-500 font-black text-sm animate-pulse uppercase tracking-tight">{error}</div>}
                 
-                <button disabled={loading} type="submit" className="w-full bg-[#FFD151] py-4 rounded-full text-3xl font-black text-white shadow-[0_6px_0_#A37B00] border-4 border-white uppercase hover:brightness-105 active:translate-y-1 transition-all disabled:opacity-50">
+                <button 
+                  onClick={() => {
+                    playClick()
+                  }}
+                  onMouseEnter={playHover}
+                  disabled={loading} type="submit" className="cursor-pointer w-full bg-[#FFD151] py-4 rounded-full text-3xl font-black text-white shadow-[0_6px_0_#A37B00] border-4 border-white uppercase hover:brightness-105 active:translate-y-1 transition-all disabled:opacity-50">
                   {loading ? '...' : 'SIGN UP'}
                 </button>
               </form>

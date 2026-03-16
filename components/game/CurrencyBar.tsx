@@ -1,10 +1,12 @@
 'use client'
 import React from 'react'
 import Image from 'next/image'
+import { useSFX } from '@/hook/useSFX'
 
 interface CurrencyBarProps {
   amount: string | number; // รับได้ทั้ง string และ number
 }
+
 
 const CurrencyBar: React.FC<CurrencyBarProps> = ({ amount }) => {
   // 💡 ฟังก์ชันจัดการตัวเลขให้มีลูกน้ำ (e.g. 12500 -> 12,500)
@@ -12,10 +14,13 @@ const CurrencyBar: React.FC<CurrencyBarProps> = ({ amount }) => {
     ? amount.toLocaleString() 
     : amount;
 
+ const { playClick } = useSFX()
   return (
-    <div className="relative inline-flex items-center group">
+    <div className="relative inline-flex items-center group select-none">
       {/* 💳 แถบพื้นหลังหลัก */}
-      <div className="relative bg-[#D0F4FF]/90 backdrop-blur-sm border-[4px] border-[#35A7FF] rounded-full px-10 py-2 flex items-center gap-4 shadow-[0_6px_0_rgba(53,167,255,0.3)] overflow-hidden">
+      <div 
+        onClick={() => {playClick()}} 
+        className="relative bg-[#D0F4FF]/90 backdrop-blur-sm border-[4px] border-[#35A7FF] rounded-full px-10 py-2 flex items-center gap-4 shadow-[0_6px_0_rgba(53,167,255,0.3)] overflow-hidden cursor-pointer">
         
         {/* ✨ แสงเงาในแถบ (Reflection) */}
         <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 z-0" />

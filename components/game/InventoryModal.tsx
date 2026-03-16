@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase' // ✅ ใช้ดึงข้อมูล
+import { useSFX } from '@/hook/useSFX' // ✅ ใช้เสียงจาก Hook ได้เลยครับ
 
 interface InventoryModalProps {
   isOpen: boolean
@@ -26,6 +27,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
   const [inventory, setInventory] = useState<any[]>([])
   const [equippedBirdId, setEquippedBirdId] = useState<string>(DEFAULT_BIRD_ID)
   const [loading, setLoading] = useState(false)
+  const { playHover, playClick } = useSFX()
 
   // 🔄 ดึงข้อมูลเมื่อเปิด Modal
   useEffect(() => {
@@ -161,7 +163,14 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                   {user ? `Backpack of ${user.user_metadata?.username || 'Player'}` : 'Guest Inventory'}
                 </p>
               </div>
-              <button onClick={onClose} className="p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm">
+              <button 
+                onClick={() => {
+                  playClick()
+                  onClose()
+                }}
+                onMouseEnter={playHover}
+                className="p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm cursor-pointer"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -179,7 +188,6 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                     return (
                       <motion.div
                         key={bird.character_id}
-                        whileHover={{ y: -5 }}
                         // ใช้ UI การ์ดแบบเดียวกับ Dashboard เป๊ะๆ
                         className={`group relative bg-white p-6 rounded-[2.5em] border-2 ${isEquipped ? 'border-[#C7EF00]' : rarityConfig[bird.rarity]?.border || 'border-slate-100'} shadow-lg flex flex-col items-center transition-all overflow-hidden`}
                       >
@@ -195,7 +203,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                             <img
                               src={bird.image_url}
                               alt={bird.character_name}
-                              className={`w-full h-full object-contain p-4 transition-all duration-300 ${isEquipped ? 'blur-[2px] opacity-60 scale-105' : ''}`}
+                              className={`w-full h-full object-contain p-4 transition-all duration-300 ${isEquipped ? ' opacity-60 scale-105' : ''}`}
                             />
                           ) : (
                             <div className="text-5xl">🐦</div>
@@ -223,10 +231,14 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
 
                         {/* 🔘 ปุ่มกดสวมใส่ (ซ่อนตอนที่ใส่อยู่ โผล่ตอน Hover ถ้ายังไม่ใส่) */}
                         {!isEquipped && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5em]">
+                          <div className=" absolute inset-0 flex items-center justify-center bg-white/40  opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5em]">
                             <button
-                              onClick={() => handleEquip(bird.character_id)}
-                              className="bg-[#35A7FF] text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_5px_0_#288DE0] hover:scale-105 active:translate-y-1 active:shadow-none transition-all"
+                              onClick={() => {
+                                playClick()
+                                handleEquip(bird.character_id)
+                              }}
+                              onMouseEnter={playHover}
+                              className="bg-[#35A7FF] text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_5px_0_#288DE0] hover:scale-105 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
                             >
                               EQUIP BIRD
                             </button>
