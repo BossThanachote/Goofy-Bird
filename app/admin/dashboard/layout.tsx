@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-// ✅ 1. เพิ่ม Trash2 icon
-import { Bird, Package, Map as MapIcon, Store, LogOut, ShieldCheck, Languages, Trash2 } from 'lucide-react'
+// ✅ 1. เพิ่มไอคอน Music สำหรับเมนูเสียง
+import { Bird, Package, Map as MapIcon, Store, LogOut, ShieldCheck, Languages, Trash2, Music } from 'lucide-react'
 
-// 📖 2. เพิ่มคำแปล Recycle Bin
+// 📖 2. เพิ่มคำแปล Sounds
 const translations = {
   EN: {
     system_status: 'System Online',
@@ -14,7 +14,8 @@ const translations = {
     items: 'Items',
     maps: 'Maps',
     shop: 'Shop',
-    recycle_bin: 'Recycle Bin', // 👈 เพิ่มตรงนี้
+    sounds: 'Sounds', // 👈 เพิ่มตรงนี้
+    recycle_bin: 'Recycle Bin', 
     sign_out: 'Sign Out',
     admin_level: 'Super Admin'
   },
@@ -25,7 +26,8 @@ const translations = {
     items: 'ไอเทม',
     maps: 'ด่าน/แผนที่',
     shop: 'ร้านค้า',
-    recycle_bin: 'ถังขยะ', // 👈 เพิ่มตรงนี้
+    sounds: 'เสียง/เพลง', // 👈 เพิ่มตรงนี้
+    recycle_bin: 'ถังขยะ', 
     sign_out: 'ออกจากระบบ',
     admin_level: 'ผู้ดูแลระบบสูงสุด'
   }
@@ -47,13 +49,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (savedLang) setLang(savedLang)
   }, [router])
 
-  // 📝 3. เพิ่มเมนูถังขยะลงใน Sidebar
+  // 📝 3. เพิ่มเมนู Sounds ลงใน Sidebar
   const menuItems = [
     { id: 'characters', label: t.characters, path: '/admin/dashboard/characters', icon: <Bird size={20} /> },
     { id: 'items', label: t.items, path: '/admin/dashboard/items', icon: <Package size={20} /> },
     { id: 'maps', label: t.maps, path: '/admin/dashboard/maps', icon: <MapIcon size={20} /> },
     { id: 'shop', label: t.shop, path: '/admin/dashboard/shop', icon: <Store size={20} /> },
-    { id: 'trash', label: t.recycle_bin, path: '/admin/dashboard/trash', icon: <Trash2 size={20} /> }, // 👈 เพิ่มบรรทัดนี้
+    { id: 'sounds', label: t.sounds, path: '/admin/dashboard/sounds', icon: <Music size={20} /> }, // 👈 เพิ่มบรรทัดนี้ (ลิงก์ไปที่ /admin/sounds ที่เราเพิ่งสร้าง)
+    { id: 'trash', label: t.recycle_bin, path: '/admin/dashboard/trash', icon: <Trash2 size={20} /> }, 
   ]
 
   const toggleLang = () => {
@@ -83,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               onClick={() => router.push(item.path)}
               className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all ${
                 pathname === item.path ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'
-              } ${item.id === 'trash' ? 'mt-4 border border-slate-700/50' : ''}`} // 👈 พิเศษ: แยกถังขยะให้ห่างออกมานิดนึง
+              } ${item.id === 'trash' ? 'mt-4 border border-slate-700/50' : ''}`}
             >
               {item.icon}
               <span className="text-sm uppercase tracking-wide">{item.label}</span>

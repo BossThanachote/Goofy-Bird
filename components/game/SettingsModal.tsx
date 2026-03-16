@@ -15,7 +15,8 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [newUsername, setNewUsername] = useState('')
-  const [showSecret, setShowSecret] = useState(false) 
+  const [showSecret, setShowSecret] = useState(false)
+  const [hasSession, setHasSession] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -23,21 +24,24 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
     }
   }, [isOpen])
 
-  const fetchUserProfile = async () => {
+ const fetchUserProfile = async () => {
     setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // ✅ ดึง user_tag มาด้วย (บอสเขียนไว้ถูกแล้วครับ!)
+        setHasSession(true) // ยืนยันว่ามีคนล็อกอินอยู่ค้างในระบบ
+
+        // ใช้ maybeSingle() เพื่อไม่ให้พังเวลาหาชื่อไม่เจอ (เช่น เผลอใช้ไอดี Admin)
         const { data, error } = await supabase
           .from('users')
           .select('username, email, user_id, user_tag, secret_code')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
 
         if (error) throw error
         setProfile(data)
       } else {
+        setHasSession(false)
         setProfile(null) 
       }
     } catch (error) {
@@ -85,13 +89,15 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={handleClose}
-            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+            onClick={onClose}
+            // 1. ลบ backdrop-blur-md ออก 
+            // 2. ปรับความเข้มสีดำเพิ่มขึ้นนิดนึง (เช่น bg-black/60 หรือ bg-slate-900/70) เพื่อให้เห็น Modal ชัดๆ
+            className="absolute inset-0 bg-black/70"
           />
 
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
@@ -123,7 +129,7 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                       <span className="font-black text-[#35A7FF]">User Name</span>
                       {isEditing ? (
                         <div className="flex items-center gap-2">
-                          <input 
+                          <input
                             type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)}
                             className="bg-white border-2 border-[#35A7FF] rounded-full px-4 py-1 text-gray-700 font-bold focus:outline-none w-[8em] sm:w-[10em]"
                             autoFocus
@@ -140,9 +146,9 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                               #{profile?.user_tag || '0000'}
                             </span>
                           </span>
-                          
+
                           {profile && (
-                            <button onClick={() => {setNewUsername(profile.username); setIsEditing(true)}} className="text-[#35A7FF] hover:scale-110 transition-transform">✏️</button>
+                            <button onClick={() => { setNewUsername(profile.username); setIsEditing(true) }} className="text-[#35A7FF] hover:scale-110 transition-transform">✏️</button>
                           )}
                         </div>
                       )}
@@ -161,18 +167,18 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                     <div className="flex items-center justify-between bg-white/80 p-4 rounded-[2em] border-2 border-[#35A7FF]/30">
                       <span className="font-black text-[#35A7FF]">Recovery Key</span>
                       <div className="flex items-center gap-2">
-                         <span className="font-mono font-bold text-[#4ECB71] tracking-widest bg-white px-3 py-1 rounded-lg border border-[#4ECB71]/20 shadow-sm">
-                            {showSecret ? (profile?.secret_code || '------') : '******'}
-                         </span>
-                         {profile && (
-                            <button onClick={() => setShowSecret(!showSecret)} className="text-[#35A7FF] text-lg hover:scale-110 transition-all">
-                              {showSecret ? '👁️‍🗨️' : '👁️'}
-                            </button>
-                         )}
+                        <span className="font-mono font-bold text-[#4ECB71] tracking-widest bg-white px-3 py-1 rounded-lg border border-[#4ECB71]/20 shadow-sm">
+                          {showSecret ? (profile?.secret_code || '------') : '******'}
+                        </span>
+                        {profile && (
+                          <button onClick={() => setShowSecret(!showSecret)} className="text-[#35A7FF] text-lg hover:scale-110 transition-all">
+                            {showSecret ? '👁️‍🗨️' : '👁️'}
+                          </button>
+                        )}
                       </div>
                     </div>
 
-                    {profile && (
+                    {hasSession && (
                       <div className="pt-6 border-t-4 border-white/30">
                         <button onClick={handleLogout} className="w-full bg-[#FF5F5F] py-4 rounded-full text-2xl font-black text-white shadow-[0_6px_0_#D14848] border-4 border-white uppercase hover:brightness-110 active:translate-y-1 active:shadow-none transition-all">
                           Logout

@@ -133,7 +133,7 @@ export default function ShopManagementPage() {
                 </div>
 
                 {/* 🔘 ปุ่มตั้งค่า (โผล่ตอน Hover) */}
-                <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5em]">
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60  opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5em]">
                   <button 
                     onClick={() => openPriceModal(char)}
                     className="bg-yellow-400 text-yellow-900 px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_5px_0_#CA8A04] hover:scale-105 active:translate-y-1 active:shadow-none transition-all flex items-center gap-2"
@@ -151,7 +151,7 @@ export default function ShopManagementPage() {
       <AnimatePresence>
         {isModalOpen && editingBird && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-900/60" />
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} className="relative bg-white w-full max-w-sm rounded-[3.5em] shadow-2xl p-8 border-[8px] border-yellow-400">
               
               <div className="flex justify-between items-center mb-6">

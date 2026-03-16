@@ -17,7 +17,7 @@ export default function SuccessModal({ isOpen, onClose, secretCode }: SuccessMod
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70"
           />
 
           {/* ตัว Card แจ้งเตือน */}
