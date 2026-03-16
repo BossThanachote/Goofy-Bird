@@ -108,7 +108,7 @@ function PlayEngine() {
             normal: userData.high_score_normal || 0,
             hard: userData.high_score_hard || 0
           })
-          setCurrentUser(prev => ({ ...prev, ...userData }))
+          setCurrentUser((prev: any) => ({ ...prev, ...userData }))
         }
       }
       const { data: birdData } = await supabase.from('characters').select('*').eq('character_id', targetBirdId).maybeSingle()
