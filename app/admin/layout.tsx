@@ -13,11 +13,9 @@ export default function AdminRootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="antialiased overflow-x-hidden">
-        {/* บอสสามารถใส่ Navbar ของแอดมินไว้ตรงนี้ในอนาคตได้ครับ */}
-        <main>{children}</main>
-      </body>
-    </html>
+    <div className="antialiased overflow-x-hidden min-h-screen bg-slate-50">
+      {/* บอสสามารถใส่ Navbar ของแอดมินไว้ตรงนี้ในอนาคตได้ครับ */}
+      <main>{children}</main>
+    </div>
   )
 }
