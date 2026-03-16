@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check } from 'lucide-react'
-import { supabase } from '@/lib/supabase' // ✅ ใช้ดึงข้อมูล
-import { useSFX } from '@/hook/useSFX' // ✅ ใช้เสียงจาก Hook ได้เลยครับ
+import { supabase } from '@/lib/supabase'
+import { useSFX } from '@/hook/useSFX'
 
 interface InventoryModalProps {
   isOpen: boolean
@@ -11,10 +11,8 @@ interface InventoryModalProps {
   user: any
 }
 
-// 🦅 ID นกเริ่มต้นที่ทุกคนต้องมี
 const DEFAULT_BIRD_ID = 'e114c607-b017-4ea6-a306-8e5c0808092a'
 
-// สี Rarity ให้ตรงกับหน้า Dashboard
 const rarityConfig: any = {
   Common: { color: 'text-slate-600', bg: 'bg-slate-100', border: 'border-slate-200' },
   Rare: { color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-400' },
@@ -29,7 +27,6 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
   const [loading, setLoading] = useState(false)
   const { playHover, playClick } = useSFX()
 
-  // 🔄 ดึงข้อมูลเมื่อเปิด Modal
   useEffect(() => {
     if (isOpen) {
       fetchInventory()
@@ -40,36 +37,28 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
   const fetchInventory = async () => {
     setLoading(true)
     try {
-      // 1. ดึงข้อมูลนกเริ่มต้น (เปลี่ยนจาก single() เป็น maybeSingle())
       const { data: defaultBirdData, error: defaultErr } = await supabase
         .from('characters')
         .select('*')
         .eq('character_id', DEFAULT_BIRD_ID)
-        .maybeSingle() // ✅ แก้ตรงนี้: จะไม่ Error แม้ส่งกลับมา 0 แถว
+        .maybeSingle()
 
       if (defaultErr) throw defaultErr
 
       let allBirds = []
 
-      // 2. ถ้าดึงข้อมูลสำเร็จ (ติด RLS หรือไม่ก็ผ่าน)
       if (defaultBirdData) {
         allBirds.push(defaultBirdData)
       } else {
-        // 🛡️ 3. FALLBACK: ถ้าหาไม่เจอ หรือโดนบล็อกเพราะเป็น Guest
-        // ให้ใช้ข้อมูลจำลอง (Mock) โชว์ไปเลย จะได้ไม่จอขาว
         allBirds.push({
           character_id: DEFAULT_BIRD_ID,
           character_name: 'GEGE',
           rarity: 'Common',
-          // ⚠️ บอสอย่าลืมเอา URL รูป Gege มาใส่ในเครื่องหมายคำพูดด้านล่างนี้นะครับ
           image_url: 'https://mtfzqtuojkjjbqxvocgc.supabase.co/storage/v1/object/public/character-images/birds/1773485319441.png',
           description: 'An orange bird just like orange'
         })
       }
 
-
-
-      // ✅ 2. ดึงข้อมูลนกที่ผู้เล่นซื้อไว้ (ถ้าล็อกอินอยู่)
       if (user) {
         const { data: userInventoryData, error: invError } = await supabase
           .from('inventory')
@@ -79,12 +68,10 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
           .eq('user_id', user.id)
 
         if (!invError && userInventoryData) {
-          // ดึงเฉพาะก้อนข้อมูล character ออกมาจากการ Join ตาราง
           const boughtBirds = userInventoryData
             .filter((item: any) => item.characters !== null)
             .map((item: any) => item.characters)
 
-          // เอาของที่ซื้อมาต่อท้ายน้อง Gege
           allBirds = [...allBirds, ...boughtBirds]
         }
       }
@@ -95,13 +82,10 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
     } finally {
       setLoading(false)
     }
-
-
   }
 
-  // 📥 ฟังก์ชันใหม่: ดึงข้อมูลว่าผู้เล่นคนนี้ใส่นกตัวไหนอยู่
   const fetchEquippedBird = async () => {
-    if (!user) return // ถ้าเป็น Guest ให้ใช้ค่า Default (Gege) ที่ตั้งไว้แต่แรก
+    if (!user) return
 
     try {
       const { data, error } = await supabase
@@ -110,7 +94,6 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
         .eq('user_id', user.id)
         .single()
 
-      // ถ้ามีข้อมูลนกที่เคยใส่ไว้ ให้เปลี่ยนป้าย EQUIPPED ไปที่ตัวนั้น
       if (data && data.equipped_bird) {
         setEquippedBirdId(data.equipped_bird)
       }
@@ -126,7 +109,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
         const { error } = await supabase
           .from('users')
           .update({ equipped_bird: birdId })
-          .eq('user_id', user.id) // เซฟเฉพาะของไอดีตัวเอง
+          .eq('user_id', user.id)
 
         if (error) throw error
         console.log("✅ บันทึกนกที่สวมใส่ลง Database เรียบร้อย!")
@@ -142,24 +125,22 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* พื้นหลังเบลอ */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
-            // 1. ลบ backdrop-blur-md ออก 
-            // 2. ปรับความเข้มสีดำเพิ่มขึ้นนิดนึง (เช่น bg-black/60 หรือ bg-slate-900/70) เพื่อให้เห็น Modal ชัดๆ
             className="absolute inset-0 bg-black/70"
           />
 
+          {/* ✅ ปรับความกว้าง Modal และ Padding ให้เหมาะกับมือถือ */}
           <motion.div
             initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }}
-            className="relative bg-[#F8FAFC] w-full max-w-4xl rounded-[3em] shadow-2xl p-8 border-[6px] border-white text-slate-800 flex flex-col max-h-[85vh]"
+            className="relative bg-[#F8FAFC] w-full max-w-4xl rounded-[2em] sm:rounded-[3em] shadow-2xl p-4 sm:p-8 border-[4px] sm:border-[6px] border-white text-slate-800 flex flex-col max-h-[85vh]"
           >
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            {/* ✅ ปรับ Header ของ Modal */}
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
               <div>
-                <h2 className="text-3xl font-black text-[#35A7FF] uppercase italic tracking-tighter">My Inventory</h2>
-                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">
+                <h2 className="text-2xl sm:text-3xl font-black text-[#35A7FF] uppercase italic tracking-tighter leading-none">My Inventory</h2>
+                <p className="text-slate-400 font-bold text-[10px] sm:text-xs uppercase tracking-widest mt-1">
                   {user ? `Backpack of ${user.user_metadata?.username || 'Player'}` : 'Guest Inventory'}
                 </p>
               </div>
@@ -169,18 +150,18 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                   onClose()
                 }}
                 onMouseEnter={playHover}
-                className="p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm cursor-pointer"
+                className="p-2 sm:p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm cursor-pointer"
               >
-                <X size={24} />
+                <X size={20} className="sm:w-6 sm:h-6" />
               </button>
             </div>
 
-            {/* Content Area */}
             {loading ? (
-              <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse">Loading Inventory...</div>
+              <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse text-sm sm:text-base">Loading Inventory...</div>
             ) : (
-              <div className="overflow-y-auto pr-2 custom-scrollbar flex-1">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="overflow-y-auto pr-1 sm:pr-2 custom-scrollbar flex-1 pb-4">
+                {/* ✅ จัด Grid เป็น 2 คอลัมน์บนมือถือ และช่องว่าง (gap) เล็กลง */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
 
                   {inventory.map((bird) => {
                     const isEquipped = equippedBirdId === bird.character_id
@@ -188,59 +169,59 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                     return (
                       <motion.div
                         key={bird.character_id}
-                        // ใช้ UI การ์ดแบบเดียวกับ Dashboard เป๊ะๆ
-                        className={`group relative bg-white p-6 rounded-[2.5em] border-2 ${isEquipped ? 'border-[#C7EF00]' : rarityConfig[bird.rarity]?.border || 'border-slate-100'} shadow-lg flex flex-col items-center transition-all overflow-hidden`}
+                  
+                        className={`group relative bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[2.5em] border-2 ${isEquipped ? 'border-[#C7EF00]' : rarityConfig[bird.rarity]?.border || 'border-slate-100'} shadow-md sm:shadow-lg flex flex-col items-center transition-all overflow-hidden h-full`}
                       >
                         {/* 🏷️ Rarity Badge */}
-                        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-wider z-10 ${rarityConfig[bird.rarity]?.bg} ${rarityConfig[bird.rarity]?.color}`}>
+                        <div className={`absolute top-2 right-2 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black uppercase tracking-wider z-10 ${rarityConfig[bird.rarity]?.bg} ${rarityConfig[bird.rarity]?.color}`}>
                           {bird.rarity}
                         </div>
 
-                        {/* 📸 กรอบรูป (ถ้า Equipped ให้เบลอ) */}
-                        <div className="relative w-full aspect-square bg-white rounded-[2em] flex items-center justify-center overflow-hidden mb-6 mt-4">
-                          {/* รูปรถ */}
+                        {/* 📸 กรอบรูป ✅ ปรับ Margin และความมน */}
+                        <div className="relative w-full aspect-square bg-white rounded-xl sm:rounded-[2em] flex items-center justify-center overflow-hidden mb-3 sm:mb-6 mt-4 sm:mt-4">
                           {bird.image_url ? (
                             <img
                               src={bird.image_url}
                               alt={bird.character_name}
-                              className={`w-full h-full object-contain p-4 transition-all duration-300 ${isEquipped ? ' opacity-60 scale-105' : ''}`}
+                              className={`w-full h-full object-contain p-2 sm:p-4 transition-all duration-300 ${isEquipped ? ' opacity-60 scale-105' : ''}`}
                             />
                           ) : (
-                            <div className="text-5xl">🐦</div>
+                            <div className="text-3xl sm:text-5xl">🐦</div>
                           )}
 
-                          {/* 🛡️ ป้าย EQUIPPED ทับบนรูปตอนเบลอ */}
+                          {/* 🛡️ ป้าย EQUIPPED ✅ ปรับขนาดตัวอักษร */}
                           {isEquipped && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="bg-[#C7EF00] text-slate-900 px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest flex items-center gap-1 shadow-lg transform rotate-[-5deg]">
-                                <Check size={14} /> EQUIPPED
+                              <div className="bg-[#C7EF00] text-slate-900 px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl font-black text-[8px] sm:text-[11px] uppercase tracking-widest flex items-center gap-1 shadow-lg transform rotate-[-5deg]">
+                                <Check size={12} className="sm:w-[14px] sm:h-[14px]"/> <span className="hidden sm:inline">EQUIPPED</span><span className="sm:hidden">IN USE</span>
                               </div>
                             </div>
                           )}
                         </div>
 
-                        {/* 📝 รายละเอียดนก */}
-                        <div className="text-center space-y-1 w-full px-2">
-                          <h3 className={`text-xl font-black italic uppercase tracking-tighter truncate ${rarityConfig[bird.rarity]?.color || 'text-slate-700'}`}>
+                        {/* 📝 รายละเอียดนก ✅ ใช้ flex-1 ดันเนื้อหาและข้อความยาวๆ ให้ตัดสวยๆ */}
+                        <div className="text-center space-y-1 w-full px-1 sm:px-2 flex-1 flex flex-col justify-end">
+                          <h3 className={`text-sm sm:text-xl font-black italic uppercase tracking-tighter truncate w-full ${rarityConfig[bird.rarity]?.color || 'text-slate-700'}`}>
                             {bird.character_name}
                           </h3>
-                          <p className="text-slate-400 font-bold text-[9px] line-clamp-2 leading-relaxed">
+                          <p className="text-slate-400 font-bold text-[7px] sm:text-[9px] line-clamp-2 leading-tight sm:leading-relaxed h-[2em] sm:h-auto overflow-hidden">
                             {bird.description || 'No description'}
                           </p>
                         </div>
 
-                        {/* 🔘 ปุ่มกดสวมใส่ (ซ่อนตอนที่ใส่อยู่ โผล่ตอน Hover ถ้ายังไม่ใส่) */}
+                        {/* 🔘 ปุ่มกดสวมใส่ ✅ ทำให้กดง่ายขึ้นบนมือถือ */}
                         {!isEquipped && (
-                          <div className=" absolute inset-0 flex items-center justify-center bg-white/40  opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5em]">
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/40 opacity-0 group-hover:opacity-100 sm:transition-opacity rounded-2xl sm:rounded-[2.5em] active:opacity-100 touch-none">
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 playClick()
                                 handleEquip(bird.character_id)
                               }}
                               onMouseEnter={playHover}
-                              className="bg-[#35A7FF] text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_5px_0_#288DE0] hover:scale-105 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
+                              className="bg-[#35A7FF] text-white px-3 py-2 sm:px-6 sm:py-3 rounded-full font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[0_4px_0_#288DE0] sm:shadow-[0_5px_0_#288DE0] hover:scale-105 active:translate-y-1 active:shadow-none transition-all cursor-pointer whitespace-nowrap"
                             >
-                              EQUIP BIRD
+                              EQUIP
                             </button>
                           </div>
                         )}

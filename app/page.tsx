@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import CurrencyBar from '@/components/game/CurrencyBar'
 import LoginModal from '@/components/game/LoginModal'
 import RegisterModal from '@/components/game/RegisterModal'
+import MultiplayerModal from '@/components/game/MultiplayerModal'
 import SettingsModal from '@/components/game/SettingsModal'
 import InventoryModal from '@/components/game/InventoryModal'
 import { Fredoka } from 'next/font/google'
@@ -14,6 +15,8 @@ import LeaderboardModal from '@/components/game/LeaderBoardModal'
 import FriendModal from '@/components/game/FriendModal'
 import BGMPlayer from '@/components/BGMPlayer'
 import { useSFX } from '@/hook/useSFX'
+import MapSelectionModal from '@/components/game/MapSelectionModal'
+
 
 
 const fredokaOne = Fredoka({ subsets: ['latin'], weight: '600' })
@@ -30,6 +33,8 @@ export default function LandingPage() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false)
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false)
   const { playHover, playClick, playBack } = useSFX()
+  const [isMultiplayerOpen, setIsMultiplayerOpen] = useState(false)
+  const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false)
   
   // ✅ เพิ่ม State สำหรับจัดการข้อมูลผู้เล่น
   const [user, setUser] = useState<any>(null)
@@ -181,7 +186,7 @@ export default function LandingPage() {
 
           <div className="space-y-6 sm:space-y-10 w-full sm:w-[40em] px-6 items-center justify-center flex flex-col">
             <motion.button 
-              onClick={() => { router.push('/play'); playClick(); }}
+              onClick={() => { setIsMapSelectionOpen(true); playClick(); }}
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onMouseEnter={playHover}
               className="w-[10em] bg-[#35A7FF] py-4 rounded-full text-3xl font-black shadow-[0_8px_0_#288DE0] border-4 border-white uppercase cursor-pointer"
@@ -191,6 +196,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-6 sm:gap-[5em] w-full items-center justify-center">
               <motion.button 
+                onClick={() => { setIsMultiplayerOpen(true); playClick(); }}
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onMouseEnter={playHover}
                 className="bg-[#FF5F5F] w-[15em] sm:w-[13em] py-3 rounded-full text-xl font-bold shadow-[0_6px_0_#D14848] uppercase cursor-pointer">Multiplayer</motion.button>
@@ -218,11 +224,11 @@ export default function LandingPage() {
       <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onUpdateSuccess={refreshUsername} />
       <InventoryModal isOpen={isInventoryOpen} onClose={() => setIsInventoryOpen(false)} user={user} />
-      <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} user={user} onUpdatePoints={(newPoints) => {
-          setPoints(newPoints)
-        }} />
+      <MapSelectionModal isOpen={isMapSelectionOpen} onClose={() => setIsMapSelectionOpen(false)} />
+      <ShopModal isOpen={isShopOpen} onClose={() => setIsShopOpen(false)} user={user} onUpdatePoints={(newPoints) => {setPoints(newPoints)}} />
       <FriendModal isOpen={isFriendModalOpen} onClose={() => setIsFriendModalOpen(false)} currentUser={user} />
       <LeaderboardModal isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
+      <MultiplayerModal isOpen={isMultiplayerOpen} onClose={() => setIsMultiplayerOpen(false)} currentUser={user} />
       <BGMPlayer />
     </div>
   )
