@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Coins, Store, ShoppingCart, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useSFX } from '@/hook/useSFX'
 
 interface ShopModalProps {
   isOpen: boolean
@@ -10,7 +11,6 @@ interface ShopModalProps {
   user: any
   onUpdatePoints?: (newPoints: number) => void
 }
-
 
 const rarityConfig: any = {
   Common: { color: 'text-slate-600', bg: 'bg-slate-100', border: 'border-slate-200' },
@@ -29,9 +29,9 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
   const [activeFilter, setActiveFilter] = useState('All')
   const [ownedBirdIds, setOwnedBirdIds] = useState<string[]>([])
   const DEFAULT_BIRD_ID = 'e114c607-b017-4ea6-a306-8e5c0808092a'
+  const { playHover, playClick, playBack } = useSFX()
   const [resultModal, setResultModal] = useState<{ isOpen: boolean, type: 'success' | 'error', title: string, message: string }>({ isOpen: false, type: 'success', title: '', message: '' })
 
-  // ✅ 1. State สำหรับเปิดปิดหน้าต่างยืนยันการซื้อ
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean, bird: any | null }>({ isOpen: false, bird: null })
 
   useEffect(() => {
@@ -76,13 +76,11 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
     }
   }
 
-  // ✅ 2. ฟังก์ชันเมื่อกดปุ่ม BUY (เปิดหน้าต่างยืนยันแทนการซื้อทันที)
   const handleBuyClick = (bird: any) => {
     if (!user) return alert("Please login to buy birds!")
     setConfirmModal({ isOpen: true, bird })
   }
 
-  // ✅ 3. ฟังก์ชันซื้อนกจริง (จะถูกเรียกเมื่อกดยืนยันใน Modal)
   const executeBuy = async () => {
     const bird = confirmModal.bird;
     if (!bird || !user) return;
@@ -122,7 +120,6 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
         return
       }
 
-      // หักเงินใน Database
       const { error: updateError } = await supabase
         .from('users')
         .update({ user_point: currentPoints - birdPrice })
@@ -130,26 +127,21 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
 
       if (updateError) throw updateError
 
-      // เพิ่มนกลงใน Inventory Database
       const { error: insertError } = await supabase
         .from('inventory')
         .insert([{ user_id: user.id, character_id: bird.character_id }])
 
       if (insertError) throw insertError
 
-      // 🌟 [เพิ่มตรงนี้] ส่งสัญญาณบอกหน้าหลักให้ลดตัวเลขเงินลงทันที!
       if (typeof onUpdatePoints === 'function') {
         onUpdatePoints(currentPoints - birdPrice);
       }
 
-      // ✅ 1. ปิดหน้าต่างยืนยัน และโชว์แอนิเมชันสำเร็จ
       setConfirmModal({ isOpen: false, bird: null })
       setResultModal({ isOpen: true, type: 'success', title: 'Purchase Successful!', message: `🎉 You have acquired "${bird.character_name}".` })
 
-      // ✅ 2. เพิ่มนกเข้า State ทันที (ปุ่มจะเปลี่ยนเป็น OWNED โดยไม่ต้องรีเฟรชหน้า!)
       setOwnedBirdIds(prev => [...prev, bird.character_id])
 
-      // ✅ 3. โชว์ผลลัพธ์ 2 วินาที แล้วปิดแค่หน้าต่าง Success ลงไป (หน้า Shop ยังเปิดอยู่ปกติ)
       setTimeout(() => {
         setResultModal(prev => ({ ...prev, isOpen: false }))
       }, 2000)
@@ -173,16 +165,23 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
       <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} className="relative bg-[#F8FAFC] w-full max-w-5xl rounded-[3em] shadow-2xl p-6 md:p-8 border-[6px] border-[#FFD151] flex flex-col max-h-[90vh]">
+            {/* ✅ 1. เพิ่ม min-h-[75vh] md:min-h-[700px] เข้าไปเพื่อล็อคความสูงหน้าต่างหลัก */}
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} className="relative bg-[#F8FAFC] w-full max-w-5xl rounded-[3em] shadow-2xl p-6 md:p-8 border-[6px] border-[#FFD151] flex flex-col min-h-[75vh] md:min-h-[700px] max-h-[90vh]">
 
-              <button onClick={onClose} className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-md border-2 border-slate-50">
+              <button 
+                onClick={() => {
+                  playClick()
+                  onClose()
+                }}
+                onMouseEnter={playHover}
+                className="absolute top-4 right-4 md:top-6 md:right-6 z-50 p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-md border-2 border-slate-50 cursor-pointer">
                 <X size={24} />
               </button>
 
               {/* 🔝 Header & Tabs */}
               <div className="flex flex-col xl:flex-row justify-between items-center mb-8 gap-6 pr-0 md:pr-16 pt-2">
                 <div>
-                  <h2 className="text-3xl md:text-4xl font-black text-[#FFD151] uppercase italic tracking-tighter drop-shadow-sm">Bird Shop</h2>
+                  <h2 className="text-3xl md:text-4xl font-black text-[#FFD151] [text-shadow:-2px_-2px_0_#000,2px_-2px_0_#000,-2px_2px_0_#000,2px_2px_0_#000] uppercase italic tracking-tighter drop-shadow-sm">Bird Shop</h2>
                   <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1 text-center md:text-left">
                     Spend your coins to collect new birds!
                   </p>
@@ -202,8 +201,12 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
                     return (
                       <button
                         key={option}
-                        onClick={() => setActiveFilter(option)}
-                        className={`px-4 py-2 rounded-full font-black text-[10px] md:text-xs uppercase tracking-wider transition-all ${btnStyle}`}
+                        onClick={() => {
+                          playClick()
+                          setActiveFilter(option)
+                        }}
+                        onMouseEnter={playHover}
+                        className={`px-4 py-2 rounded-full font-black text-[10px] md:text-xs uppercase tracking-wider transition-all ${btnStyle} cursor-pointer`}
                       >
                         {option}
                       </button>
@@ -229,20 +232,21 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
 
               {/* 🦅 Shop Grid */}
               {loading ? (
-                <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse">Stocking up the shop...</div>
+                // ✅ 2. เพิ่ม min-h-[300px] เผื่อไว้ดึงให้พื้นที่ตรงนี้กว้างรอเสมอ
+                <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse min-h-[300px]">Stocking up the shop...</div>
               ) : displayItems.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center flex-col text-slate-400 opacity-50">
+                // ✅ 3. เพิ่ม min-h-[300px] ในกล่อง Empty State เช่นกัน
+                <div className="flex-1 flex items-center justify-center flex-col text-slate-400 opacity-50 min-h-[300px]">
                   <Store size={64} className="mb-4" />
                   <p className="font-black uppercase tracking-widest">No birds available in this category</p>
                 </div>
               ) : (
-                <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
+                <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4 min-h-[300px]">
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     {displayItems.map((bird) => (
                       <motion.div
                         key={bird.character_id}
-                        whileHover={{ y: -5 }}
-                        className="group relative bg-white p-4 md:p-6 rounded-[2.5em] border-2 border-slate-100 hover:border-[#FFD151] shadow-sm hover:shadow-xl flex flex-col items-center transition-all overflow-hidden"
+                        className="group relative bg-white p-4 md:p-6 rounded-[2.5em] border-2 border-slate-100 hover:border-[#FFD151] shadow-sm hover:shadow-xl flex flex-col items-center transition-all overflow-hidden cursor-pointer"
                       >
                         <div className={`absolute top-3 left-3 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider z-10 ${rarityConfig[bird.rarity]?.bg} ${rarityConfig[bird.rarity]?.color}`}>
                           {bird.rarity}
@@ -274,10 +278,13 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
                             <span className="text-green-500 text-lg leading-none">✓</span> OWNED
                           </button>
                         ) : (
-                          // ✅ 4. เปลี่ยนปุ่ม BUY ให้เรียก handleBuyClick เพื่อโชว์ Modal แทน
                           <button
-                            onClick={() => handleBuyClick(bird)}
-                            className="w-full bg-[#FFD151] text-yellow-900 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_4px_0_#CA8A04] hover:bg-[#FACC15] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
+                            onClick={() => {
+                              playClick()
+                              handleBuyClick(bird)
+                            }}
+                            onMouseEnter={playHover}
+                            className="w-full bg-[#FFD151] text-yellow-900 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_4px_0_#CA8A04] hover:bg-[#FACC15] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
                           >
                             <ShoppingCart size={16} /> BUY
                           </button>
@@ -292,13 +299,17 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
         )}
       </AnimatePresence>
 
-      {/* ✅ 5. โค้ดส่วนของ Confirm Purchase Modal (z-[110] เพื่อให้อยู่บนสุด) */}
       <AnimatePresence>
         {confirmModal.isOpen && confirmModal.bird && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => !buying && setConfirmModal({ isOpen: false, bird: null })}
+              onClick={() => {
+                if (!buying) {
+                  playBack()
+                  setConfirmModal({ isOpen: false, bird: null })
+                }
+              }}
               className="absolute inset-0 bg-slate-900/60"
             />
 
@@ -328,14 +339,24 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
 
               <div className="flex gap-3 w-full">
                 <button
-                  onClick={() => setConfirmModal({ isOpen: false, bird: null })} disabled={buying}
-                  className="flex-1 py-4 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-2xl font-black uppercase text-sm transition-colors"
+                  onClick={() => {
+                    playBack()
+                    setConfirmModal({ isOpen: false, bird: null })
+                  }} 
+                  onMouseEnter={playHover}
+                  disabled={buying}
+                  className="flex-1 py-4 bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-2xl font-black uppercase text-sm transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={executeBuy} disabled={buying}
-                  className="flex-1 py-4 bg-[#FFD151] text-yellow-900 hover:bg-[#FACC15] rounded-2xl font-black uppercase text-sm transition-all shadow-[0_4px_0_#CA8A04] active:scale-95 active:translate-y-1 active:shadow-none disabled:opacity-50 flex justify-center items-center"
+                  onClick={() => {
+                    playClick()
+                    executeBuy()
+                  }} 
+                  onMouseEnter={playHover}
+                  disabled={buying}
+                  className="flex-1 py-4 bg-[#FFD151] text-yellow-900 hover:bg-[#FACC15] rounded-2xl font-black uppercase text-sm transition-all shadow-[0_4px_0_#CA8A04] active:scale-95 active:translate-y-1 active:shadow-none disabled:opacity-50 flex justify-center items-center cursor-pointer"
                 >
                   {buying ? 'Processing...' : 'Yes, Buy It!'}
                 </button>
@@ -345,21 +366,24 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
         )}
       </AnimatePresence>
 
-      {/* ✅ โค้ดส่วนของ Result Modal (สำเร็จ / ผิดพลาด) */}
       <AnimatePresence>
         {resultModal.isOpen && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 bg-slate-900/60"
-              onClick={() => resultModal.type === 'error' && setResultModal({ ...resultModal, isOpen: false })}
+              onClick={() => {
+                if (resultModal.type === 'error') {
+                  playBack()
+                  setResultModal({ ...resultModal, isOpen: false })
+                }
+              }}
             />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8, y: 20 }}
               className="relative bg-white rounded-[2em] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center overflow-hidden"
             >
-              {/* แถบสีด้านบนสุดของ Modal */}
               <div className={`absolute top-0 left-0 w-full h-3 ${resultModal.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
 
               <div className={`p-4 rounded-full mb-4 mt-2 ${resultModal.type === 'success' ? 'bg-green-100 text-green-500' : 'bg-red-100 text-red-500'}`}>
@@ -374,11 +398,14 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
                 {resultModal.message}
               </p>
 
-              {/* ปุ่มปิด: จะโชว์เฉพาะตอน Error เพราะถ้า Success แอปจะรีเฟรชอัปเดตกระเป๋าให้เอง */}
               {resultModal.type === 'error' ? (
                 <button
-                  onClick={() => setResultModal({ ...resultModal, isOpen: false })}
-                  className="w-full py-4 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-2xl font-black uppercase text-sm transition-colors active:scale-95"
+                  onClick={() => {
+                    playBack()
+                    setResultModal({ ...resultModal, isOpen: false })
+                  }}
+                  onMouseEnter={playHover}
+                  className="w-full py-4 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-2xl font-black uppercase text-sm transition-colors active:scale-95 cursor-pointer"
                 >
                   Close
                 </button>

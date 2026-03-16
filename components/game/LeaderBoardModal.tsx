@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trophy, Medal, Crown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-
+import { useSFX } from '@/hook/useSFX'
 interface LeaderboardModalProps {
   isOpen: boolean
   onClose: () => void
@@ -15,6 +15,7 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
   const [activeTab, setActiveTab] = useState<Difficulty>('easy')
   const [leaders, setLeaders] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const { playHover, playClick, playBack } = useSFX()
 
   useEffect(() => {
     if (isOpen) fetchLeaderboard(activeTab)
@@ -54,9 +55,13 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
             className="absolute inset-0 bg-black/70"
           />
 
-          <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} className="relative bg-[#F8FAFC] w-full max-w-2xl rounded-[3em] shadow-2xl p-6 md:p-8 border-[6px] border-[#FFD151] flex flex-col max-h-[85vh]">
+          <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} className="relative bg-[#F8FAFC] w-full max-w-2xl rounded-[3em] shadow-2xl p-6 md:p-8 border-[6px] border-[#FFD151] flex flex-col min-h-[70vh] md:min-h-[600px]">
 
-            <button onClick={onClose} className="absolute top-6 right-6 p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm z-10"><X size={24} /></button>
+            <button 
+              onClick={() => {
+              playClick()
+              onClose() }}
+              onMouseEnter={playHover} className="absolute top-6 right-6 p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm z-10 cursor-pointer"><X size={24} /></button>
 
             {/* Header */}
             <div className="text-center mb-6">
@@ -70,8 +75,12 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
               {(['easy', 'normal', 'hard'] as Difficulty[]).map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-3 rounded-full font-black text-xs md:text-sm uppercase tracking-widest transition-all ${activeTab === tab
+                  onClick={() => {
+                    playClick()
+                    setActiveTab(tab)
+                  }}
+                  onMouseEnter={playHover}
+                  className={`flex-1 py-3 rounded-full font-black text-xs md:text-sm uppercase tracking-widest transition-all cursor-pointer ${activeTab === tab
                       ? (tab === 'easy' ? 'bg-green-400 text-green-900 shadow-md' : tab === 'normal' ? 'bg-yellow-400 text-yellow-900 shadow-md' : 'bg-red-500 text-white shadow-md')
                       : 'bg-transparent text-slate-400 hover:bg-slate-200'
                     }`}
@@ -82,7 +91,7 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
             </div>
 
             {/* Leaderboard List */}
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar bg-white rounded-3xl p-2 border-2 border-slate-100">
+            <div className="flex-1 flex flex-col overflow-y-auto pr-2 custom-scrollbar bg-white rounded-3xl p-2 border-2 border-slate-100">
               {loading ? (
                 <div className="py-20 text-center text-slate-400 font-bold animate-pulse uppercase tracking-widest">Loading Champions...</div>
               ) : leaders.length === 0 ? (
