@@ -314,7 +314,7 @@ export default function GamePlayPage() {
       {/* 🟢 UI: Menu / Ready / GameOver */}
       <AnimatePresence>
         {gameState === 'menu' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/40 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col items-center justify-center z-40 inset-0 bg-black/70">
             <h1 className="text-7xl font-black text-white italic drop-shadow-2xl uppercase tracking-tighter mb-8 text-center">SELECT DIFFICULTY</h1>
             <div className="flex flex-col md:flex-row gap-4">
               <button onClick={(e) => { e.stopPropagation(); startGame('easy'); }} className="bg-green-400 hover:bg-green-500 text-green-900 px-8 py-4 rounded-3xl font-black text-2xl uppercase shadow-[0_6px_0_#15803D] hover:translate-y-1 hover:shadow-[0_2px_0_#15803D] transition-all border-4 border-white flex items-center gap-2"><Zap /> EASY</button>
@@ -333,7 +333,7 @@ export default function GamePlayPage() {
         )}
 
         {gameState === 'gameover' && (
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/60 backdrop-blur-md">
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/70">
             <h1 className="text-7xl font-black text-white italic drop-shadow-2xl uppercase tracking-tighter mb-6 text-center text-red-500">GAME OVER</h1>
             <div className="flex gap-4 mb-8">
                <div className="bg-slate-800/80 px-8 py-6 rounded-3xl border-2 border-slate-600 text-center flex flex-col items-center shadow-xl">
@@ -347,7 +347,7 @@ export default function GamePlayPage() {
                  <div className="mt-2 text-yellow-400/50 font-bold text-[10px] uppercase">Diff Bonus: x{difficulty === 'hard' ? 2 : (difficulty === 'normal' ? 1.5 : 1)}</div>
                </div>
              </div>
-             <button onClick={(e) => { e.stopPropagation(); setGameState('menu'); }} className="bg-white text-slate-800 px-8 py-3 rounded-full font-black text-xl shadow-lg border-2 border-white hover:scale-105 transition-all">MAIN MENU</button>
+             <button onClick={(e) => { e.stopPropagation(); setGameState('menu'); }} className="bg-white text-slate-800 px-8 py-3 rounded-full font-black text-xl shadow-lg border-2 border-white hover:scale-105 transition-all">Retry again</button>
           </motion.div>
         )}
       </AnimatePresence>

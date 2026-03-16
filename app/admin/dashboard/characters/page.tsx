@@ -138,14 +138,12 @@ export default function CharactersPage() {
   }
 
   const handleDeleteCharacter = async (id: string, name: string) => {
-    const confirmDelete = window.confirm(`บอสแน่ใจนะว่าจะลบ "${name}" ทิ้งไปจริงๆ? (สามารถกู้คืนได้ทีหลัง)`)
-    if (!confirmDelete) return
-
+    // ❌ เอาการแจ้งเตือนกดยืนยันออกไปแล้ว กดปุ๊บทำงานทันที!
     setLoading(true)
     try {
       const { error } = await supabaseAdmin
         .from('characters')
-        .update({ is_deleted: true }) // ✅ เปลี่ยนสถานะเป็นถูกลบ แทนที่จะลบทิ้งจริงๆ
+        .update({ is_deleted: true }) // ✅ เปลี่ยนสถานะเป็นถูกลบ
         .eq('character_id', id)
 
       if (error) throw error
@@ -157,7 +155,6 @@ export default function CharactersPage() {
       setLoading(false)
     }
   }
-
   // 🟢 ฟังก์ชันเปิดหน้าแก้ไขพร้อมดึงข้อมูลเดิมมาใส่ฟอร์ม
   const openEditModal = (bird: any) => {
     setEditingBird(bird)
@@ -282,7 +279,7 @@ export default function CharactersPage() {
       <AnimatePresence>
         {(isAddModalOpen || isEditModalOpen) && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="absolute inset-0 bg-slate-900/60 " />
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="relative bg-white w-full max-w-lg rounded-[3.5em] shadow-2xl p-8 border-[10px] border-blue-600">
               
               <form onSubmit={isEditModalOpen ? handleUpdateCharacter : handleAddCharacter} className="space-y-5">

@@ -164,7 +164,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-black/70"
           />
 
           <motion.div 

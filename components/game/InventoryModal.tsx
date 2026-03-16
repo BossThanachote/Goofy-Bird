@@ -23,7 +23,7 @@ const rarityConfig: any = {
 }
 
 export default function InventoryModal({ isOpen, onClose, user }: InventoryModalProps) {
-  const [inventory, setInventory] = useState<any[]>([]) 
+  const [inventory, setInventory] = useState<any[]>([])
   const [equippedBirdId, setEquippedBirdId] = useState<string>(DEFAULT_BIRD_ID)
   const [loading, setLoading] = useState(false)
 
@@ -35,7 +35,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
     }
   }, [isOpen, user])
 
- const fetchInventory = async () => {
+  const fetchInventory = async () => {
     setLoading(true)
     try {
       // 1. ดึงข้อมูลนกเริ่มต้น (เปลี่ยนจาก single() เป็น maybeSingle())
@@ -46,27 +46,27 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
         .maybeSingle() // ✅ แก้ตรงนี้: จะไม่ Error แม้ส่งกลับมา 0 แถว
 
       if (defaultErr) throw defaultErr
-      
+
       let allBirds = []
-      
+
       // 2. ถ้าดึงข้อมูลสำเร็จ (ติด RLS หรือไม่ก็ผ่าน)
       if (defaultBirdData) {
-         allBirds.push(defaultBirdData) 
+        allBirds.push(defaultBirdData)
       } else {
-         // 🛡️ 3. FALLBACK: ถ้าหาไม่เจอ หรือโดนบล็อกเพราะเป็น Guest
-         // ให้ใช้ข้อมูลจำลอง (Mock) โชว์ไปเลย จะได้ไม่จอขาว
-         allBirds.push({
-           character_id: DEFAULT_BIRD_ID,
-           character_name: 'GEGE',
-           rarity: 'Common',
-           // ⚠️ บอสอย่าลืมเอา URL รูป Gege มาใส่ในเครื่องหมายคำพูดด้านล่างนี้นะครับ
-           image_url: 'https://mtfzqtuojkjjbqxvocgc.supabase.co/storage/v1/object/public/character-images/birds/1773485319441.png', 
-           description: 'An orange bird just like orange'
-         })
+        // 🛡️ 3. FALLBACK: ถ้าหาไม่เจอ หรือโดนบล็อกเพราะเป็น Guest
+        // ให้ใช้ข้อมูลจำลอง (Mock) โชว์ไปเลย จะได้ไม่จอขาว
+        allBirds.push({
+          character_id: DEFAULT_BIRD_ID,
+          character_name: 'GEGE',
+          rarity: 'Common',
+          // ⚠️ บอสอย่าลืมเอา URL รูป Gege มาใส่ในเครื่องหมายคำพูดด้านล่างนี้นะครับ
+          image_url: 'https://mtfzqtuojkjjbqxvocgc.supabase.co/storage/v1/object/public/character-images/birds/1773485319441.png',
+          description: 'An orange bird just like orange'
+        })
       }
 
-      
-      
+
+
       // ✅ 2. ดึงข้อมูลนกที่ผู้เล่นซื้อไว้ (ถ้าล็อกอินอยู่)
       if (user) {
         const { data: userInventoryData, error: invError } = await supabase
@@ -75,15 +75,15 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
             characters (*)
           `)
           .eq('user_id', user.id)
-          
+
         if (!invError && userInventoryData) {
-           // ดึงเฉพาะก้อนข้อมูล character ออกมาจากการ Join ตาราง
-           const boughtBirds = userInventoryData
-             .filter((item: any) => item.characters !== null) 
-             .map((item: any) => item.characters)
-           
-           // เอาของที่ซื้อมาต่อท้ายน้อง Gege
-           allBirds = [...allBirds, ...boughtBirds]
+          // ดึงเฉพาะก้อนข้อมูล character ออกมาจากการ Join ตาราง
+          const boughtBirds = userInventoryData
+            .filter((item: any) => item.characters !== null)
+            .map((item: any) => item.characters)
+
+          // เอาของที่ซื้อมาต่อท้ายน้อง Gege
+          allBirds = [...allBirds, ...boughtBirds]
         }
       }
 
@@ -94,7 +94,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
       setLoading(false)
     }
 
-    
+
   }
 
   // 📥 ฟังก์ชันใหม่: ดึงข้อมูลว่าผู้เล่นคนนี้ใส่นกตัวไหนอยู่
@@ -107,7 +107,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
         .select('equipped_bird')
         .eq('user_id', user.id)
         .single()
-      
+
       // ถ้ามีข้อมูลนกที่เคยใส่ไว้ ให้เปลี่ยนป้าย EQUIPPED ไปที่ตัวนั้น
       if (data && data.equipped_bird) {
         setEquippedBirdId(data.equipped_bird)
@@ -141,14 +141,16 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* พื้นหลังเบลอ */}
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-            onClick={onClose} 
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            // 1. ลบ backdrop-blur-md ออก 
+            // 2. ปรับความเข้มสีดำเพิ่มขึ้นนิดนึง (เช่น bg-black/60 หรือ bg-slate-900/70) เพื่อให้เห็น Modal ชัดๆ
+            className="absolute inset-0 bg-black/70"
           />
-          
-          <motion.div 
-            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} 
+
+          <motion.div
+            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }}
             className="relative bg-[#F8FAFC] w-full max-w-4xl rounded-[3em] shadow-2xl p-8 border-[6px] border-white text-slate-800 flex flex-col max-h-[85vh]"
           >
             {/* Header */}
@@ -166,16 +168,16 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
 
             {/* Content Area */}
             {loading ? (
-               <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse">Loading Inventory...</div>
+              <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse">Loading Inventory...</div>
             ) : (
               <div className="overflow-y-auto pr-2 custom-scrollbar flex-1">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  
+
                   {inventory.map((bird) => {
                     const isEquipped = equippedBirdId === bird.character_id
 
                     return (
-                      <motion.div 
+                      <motion.div
                         key={bird.character_id}
                         whileHover={{ y: -5 }}
                         // ใช้ UI การ์ดแบบเดียวกับ Dashboard เป๊ะๆ
@@ -188,25 +190,25 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
 
                         {/* 📸 กรอบรูป (ถ้า Equipped ให้เบลอ) */}
                         <div className="relative w-full aspect-square bg-white rounded-[2em] flex items-center justify-center overflow-hidden mb-6 mt-4">
-                           {/* รูปรถ */}
-                           {bird.image_url ? (
-                             <img 
-                               src={bird.image_url} 
-                               alt={bird.character_name} 
-                               className={`w-full h-full object-contain p-4 transition-all duration-300 ${isEquipped ? 'blur-[2px] opacity-60 scale-105' : ''}`} 
-                             />
-                           ) : (
-                             <div className="text-5xl">🐦</div>
-                           )}
+                          {/* รูปรถ */}
+                          {bird.image_url ? (
+                            <img
+                              src={bird.image_url}
+                              alt={bird.character_name}
+                              className={`w-full h-full object-contain p-4 transition-all duration-300 ${isEquipped ? 'blur-[2px] opacity-60 scale-105' : ''}`}
+                            />
+                          ) : (
+                            <div className="text-5xl">🐦</div>
+                          )}
 
-                           {/* 🛡️ ป้าย EQUIPPED ทับบนรูปตอนเบลอ */}
-                           {isEquipped && (
-                             <div className="absolute inset-0 flex items-center justify-center">
-                               <div className="bg-[#C7EF00] text-slate-900 px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest flex items-center gap-1 shadow-lg transform rotate-[-5deg]">
-                                 <Check size={14} /> EQUIPPED
-                               </div>
-                             </div>
-                           )}
+                          {/* 🛡️ ป้าย EQUIPPED ทับบนรูปตอนเบลอ */}
+                          {isEquipped && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="bg-[#C7EF00] text-slate-900 px-4 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest flex items-center gap-1 shadow-lg transform rotate-[-5deg]">
+                                <Check size={14} /> EQUIPPED
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* 📝 รายละเอียดนก */}
@@ -222,7 +224,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                         {/* 🔘 ปุ่มกดสวมใส่ (ซ่อนตอนที่ใส่อยู่ โผล่ตอน Hover ถ้ายังไม่ใส่) */}
                         {!isEquipped && (
                           <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5em]">
-                            <button 
+                            <button
                               onClick={() => handleEquip(bird.character_id)}
                               className="bg-[#35A7FF] text-white px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_5px_0_#288DE0] hover:scale-105 active:translate-y-1 active:shadow-none transition-all"
                             >
@@ -230,7 +232,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                             </button>
                           </div>
                         )}
-                        
+
                       </motion.div>
                     )
                   })}

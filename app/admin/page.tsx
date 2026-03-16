@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
       />
 
       {/* 🌫️ Overlay เพิ่มความอ่านง่าย */}
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] z-[1]" />
+      <div className="absolute inset-0 bg-white/20  z-[1]" />
 
       {/* 📦 Login Card */}
       <motion.div 

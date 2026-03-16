@@ -23,7 +23,7 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
   const fetchLeaderboard = async (diff: Difficulty) => {
     setLoading(true)
     const column = diff === 'easy' ? 'high_score' : (diff === 'normal' ? 'high_score_normal' : 'high_score_hard')
-    
+
     try {
       // ดึง Top 10 ที่คะแนนมากกว่า 0 เรียงจากมากไปน้อย
       const { data, error } = await supabase
@@ -46,10 +46,16 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-          
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            // 1. ลบ backdrop-blur-md ออก 
+            // 2. ปรับความเข้มสีดำเพิ่มขึ้นนิดนึง (เช่น bg-black/60 หรือ bg-slate-900/70) เพื่อให้เห็น Modal ชัดๆ
+            className="absolute inset-0 bg-black/70"
+          />
+
           <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} className="relative bg-[#F8FAFC] w-full max-w-2xl rounded-[3em] shadow-2xl p-6 md:p-8 border-[6px] border-[#FFD151] flex flex-col max-h-[85vh]">
-            
+
             <button onClick={onClose} className="absolute top-6 right-6 p-3 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-all shadow-sm z-10"><X size={24} /></button>
 
             {/* Header */}
@@ -65,11 +71,10 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-3 rounded-full font-black text-xs md:text-sm uppercase tracking-widest transition-all ${
-                    activeTab === tab 
+                  className={`flex-1 py-3 rounded-full font-black text-xs md:text-sm uppercase tracking-widest transition-all ${activeTab === tab
                       ? (tab === 'easy' ? 'bg-green-400 text-green-900 shadow-md' : tab === 'normal' ? 'bg-yellow-400 text-yellow-900 shadow-md' : 'bg-red-500 text-white shadow-md')
                       : 'bg-transparent text-slate-400 hover:bg-slate-200'
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -87,23 +92,21 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
                   {leaders.map((player, index) => {
                     const scoreCol = activeTab === 'easy' ? 'high_score' : (activeTab === 'normal' ? 'high_score_normal' : 'high_score_hard')
                     const isTop3 = index < 3
-                    
+
                     return (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}
-                        key={index} 
-                        className={`flex items-center justify-between p-4 rounded-2xl border-2 ${
-                          index === 0 ? 'bg-yellow-50 border-yellow-300 shadow-sm' : 
-                          index === 1 ? 'bg-slate-50 border-slate-300' : 
-                          index === 2 ? 'bg-orange-50 border-orange-300' : 'bg-white border-slate-100'
-                        }`}
+                        key={index}
+                        className={`flex items-center justify-between p-4 rounded-2xl border-2 ${index === 0 ? 'bg-yellow-50 border-yellow-300 shadow-sm' :
+                            index === 1 ? 'bg-slate-50 border-slate-300' :
+                              index === 2 ? 'bg-orange-50 border-orange-300' : 'bg-white border-slate-100'
+                          }`}
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 flex items-center justify-center rounded-full font-black text-lg ${
-                            index === 0 ? 'bg-yellow-400 text-yellow-900' : 
-                            index === 1 ? 'bg-slate-300 text-slate-700' : 
-                            index === 2 ? 'bg-orange-400 text-orange-900' : 'bg-slate-100 text-slate-400'
-                          }`}>
+                          <div className={`w-10 h-10 flex items-center justify-center rounded-full font-black text-lg ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                              index === 1 ? 'bg-slate-300 text-slate-700' :
+                                index === 2 ? 'bg-orange-400 text-orange-900' : 'bg-slate-100 text-slate-400'
+                            }`}>
                             {index === 0 ? <Crown size={20} /> : index === 1 || index === 2 ? <Medal size={20} /> : `#${index + 1}`}
                           </div>
                           <span className={`font-black text-lg uppercase italic ${isTop3 ? 'text-slate-800' : 'text-slate-600'}`}>
