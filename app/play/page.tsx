@@ -3,8 +3,13 @@ import React, { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
-import { Heart, Trophy, Coins, Skull, Zap, Gauge, Eye } from 'lucide-react'
+import { Heart, Trophy, Coins, Eye } from 'lucide-react'
 import { useSFX } from '@/hook/useSFX'
+import LoadingScreen from '@/components/gameplay/LoadingScreen'
+import ObstacleRenderer from '@/components/gameplay/ObstacleRenderer'
+import ReadyModal from '@/components/gameplay/ReadyModal'
+import GameOverModal from '@/components/gameplay/GameOverModal'
+import { Obstacle, generateObstacle, DIFFICULTY_CONFIG } from '@/lib/obstacleManager'
 
 const DEFAULT_BIRD_ID = 'e114c607-b017-4ea6-a306-8e5c0808092a'
 const GRAVITY = 0.5;
@@ -12,15 +17,6 @@ const JUMP_STRENGTH = -7;
 const IFRAME_DURATION = 1500;
 
 type Difficulty = 'easy' | 'normal' | 'hard';
-type ObstacleType = 'pipe-top' | 'pipe-bottom' | 'cloud' | 'enemy-bird' | 'stalactite' | 'frog' | 'pendulum' | 'rocket';
-interface Obstacle {
-  id: number; type: ObstacleType;
-  x: number; y: number;
-  width: number; height: number;
-  speedModX: number; speedModY: number;
-  baseY?: number; 
-  scale: number; // ✅ เก็บค่า Scale ของอุปสรรคแต่ละตัวไว้
-}
 
 function PlayEngine() {
   const router = useRouter()
@@ -30,7 +26,7 @@ function PlayEngine() {
   const diffParam = searchParams.get('diff') as Difficulty || 'normal'
   const roomId = searchParams.get('roomId')
 
-  const { playHover, playClick, playBack, playHit, playJump } = useSFX()
+  const { playHover, playClick, playHit, playJump } = useSFX()
 
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [playerBird, setPlayerBird] = useState<any>(null)
@@ -68,12 +64,6 @@ function PlayEngine() {
 
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const gameOverSfxRef = useRef<HTMLAudioElement | null>(null);
-
-  const diffSettings = {
-    easy: { speed: 5, spawnMin: 80, spawnMax: 130, types: ['pipe-top', 'pipe-bottom', 'cloud', 'enemy-bird'] as ObstacleType[] },
-    normal: { speed: 7, spawnMin: 50, spawnMax: 90, types: ['pipe-top', 'pipe-bottom', 'cloud', 'enemy-bird', 'stalactite', 'frog'] as ObstacleType[] },
-    hard: { speed: 10, spawnMin: 30, spawnMax: 60, types: ['pipe-top', 'pipe-bottom', 'cloud', 'enemy-bird', 'stalactite', 'frog', 'pendulum', 'rocket'] as ObstacleType[] }
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -260,7 +250,6 @@ function PlayEngine() {
   };
 
   const jump = () => {
-    // ✅ บัค #1: บล็อคไม่ให้ขยับถ้ากำลัง Loading หน้าจออยู่
     if (isLoading || gameState === 'spectating' || gameState === 'gameover') return;
     
     if (gameState === 'ready') {
@@ -276,149 +265,132 @@ function PlayEngine() {
     const handleKeyDown = (e: KeyboardEvent) => { if (e.code === 'Space') jump() }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [gameState, isLoading]) // 👈 เพิ่ม isLoading ใน dependency
+  }, [gameState, isLoading])
 
-  // 🌀 Game Engine Loop
+  // 🌀 Game Engine Loop (✅ อัปเกรดระบบ FPS Capping กันหน้าจอ 144Hz)
   useEffect(() => {
     if ((gameState === 'playing' || gameState === 'spectating') && hearts > 0) {
-      const config = diffSettings[difficulty];
+      const config = DIFFICULTY_CONFIG[difficulty];
+      
+      let lastTime = performance.now();
+      const targetFPS = 144;
+      const frameInterval = 1000 / targetFPS;
 
-      const update = () => {
-        if (gameState === 'playing') {
-          scoreRef.current += 1;
-          setScore(scoreRef.current);
-        }
+      const update = (currentTime: number) => {
+        requestRef.current = requestAnimationFrame(update);
+        const deltaTime = currentTime - lastTime;
 
-        // ✅ คำนวณ Scale หลักของเกม (จอเล็กย่อ จอใหญ่ขยาย)
-        const uiScale = windowWidth < 768 ? 0.6 : (windowWidth < 1024 ? 0.8 : 1);
-        
-        // ✅ ปรับความเร็วเกมให้สัมพันธ์กับหน้าจอ (จอกว้างใช้เวลาวิ่งเท่ากับจอแคบ)
-        const screenSpeedRatio = windowWidth / 1000;
-        const currentSpeed = config.speed * screenSpeedRatio;
+        if (deltaTime >= frameInterval) {
+          lastTime = currentTime - (deltaTime % frameInterval);
 
-        if (gameState === 'playing') {
-          setBirdPosition((pos) => {
-            const newPos = pos + velocity
-            myYRef.current = newPos 
+          if (gameState === 'playing') {
+            scoreRef.current += 1;
+            setScore(scoreRef.current);
+          }
 
-            // 🌋 ระบบ Hazard พื้นลาวา (ปรับ Hitbox ตาม Scale)
-            const lavaZone = 120 * uiScale;
-            if (currentMap?.has_hazard && newPos > windowHeight - lavaZone) {
-               takeDamage()
-               return windowHeight - lavaZone
-            }
+          // ✅ ปรับ Scale ใหม่ให้ Desktop ใหญ่สะใจขึ้น
+          const uiScale = windowWidth < 768 ? 0.7 : (windowWidth < 1024 ? 1.0 : (windowWidth < 1440 ? 1.3 : 1.6));
+          const screenSpeedRatio = windowWidth / 1000;
+          const currentSpeed = config.speed * screenSpeedRatio;
 
-            // ชนพื้นปกติ
-            const bottomSafeZone = 80 * uiScale;
-            if (newPos < 0 || newPos > windowHeight - bottomSafeZone) {
-              takeDamage();
-              return newPos < 0 ? 5 : windowHeight - (bottomSafeZone + 5);
-            }
-            return newPos
-          })
-          setVelocity((v) => v + GRAVITY)
-        }
+          if (gameState === 'playing') {
+            setBirdPosition((pos) => {
+              const newPos = pos + velocity
+              myYRef.current = newPos 
 
-        setObstacles((prevObstacles) => {
-          const birdX = windowWidth * 0.2;
-          const birdY = birdPosition;
-          
-          // ✅ ปรับ Hitbox ของนกให้สมมาตรตามหน้าจอ
-          const birdSize = windowWidth < 768 ? 40 : 55;
+              const lavaZone = 120 * uiScale;
+              if (currentMap?.has_hazard && newPos > windowHeight - lavaZone) {
+                 takeDamage()
+                 return windowHeight - lavaZone
+              }
 
-          const movedObstacles = prevObstacles.map(obs => {
-            // ✅ ใช้ความเร็วแบบ Dynamic
-            let newX = obs.x - (currentSpeed + (obs.speedModX * screenSpeedRatio));
-            let newY = obs.y + (obs.speedModY * screenSpeedRatio);
+              const bottomSafeZone = 80 * uiScale;
+              if (newPos < 0 || newPos > windowHeight - bottomSafeZone) {
+                takeDamage();
+                return newPos < 0 ? 5 : windowHeight - (bottomSafeZone + 5);
+              }
+              return newPos
+            })
+            setVelocity((v) => v + GRAVITY)
+          }
 
-            // ✅ บัค #2: คำนวณแกน Y ใหม่เสมอ เผื่อผู้เล่นขยายหน้าจอตอนกำลังเล่น (ป้องกันท่อลอยฟ้า)
-            if (obs.type === 'pipe-bottom') {
-              newY = windowHeight - obs.height;
-            } else if (obs.type === 'frog' && obs.baseY !== undefined) {
-              obs.baseY = windowHeight - (80 * obs.scale);
-              newY = obs.baseY - Math.abs(Math.sin(newX / 60)) * (180 * obs.scale);
-            } else if (obs.type === 'pendulum' && obs.baseY !== undefined) {
-              obs.baseY = windowHeight / 2;
-              newY = obs.baseY + Math.sin(newX / 80) * (150 * obs.scale);
-            }
+          setObstacles((prevObstacles) => {
+            const birdX = windowWidth * 0.2;
+            const birdY = birdPosition;
+            
+            // ✅ ให้ Hitbox นกขยายตาม uiScale ด้วย จะได้ชนเป๊ะๆ
+            const birdSize = 50 * uiScale;
 
-            return { ...obs, x: newX, y: newY };
-          }).filter(obs => obs.x + obs.width > -100);
+            const movedObstacles = prevObstacles.map(obs => {
+              let newX = obs.x - (currentSpeed + (obs.speedModX * screenSpeedRatio));
+              let newY = obs.y + (obs.speedModY * screenSpeedRatio);
 
-          if (gameState === 'playing' && !invincibleRef.current) {
-            for (let obs of movedObstacles) {
-              if (birdX < obs.x + obs.width && birdX + birdSize > obs.x && birdY < obs.y + obs.height && birdY + birdSize > obs.y) {
-                takeDamage(); break; 
+              if (obs.type === 'pipe-bottom') {
+                newY = windowHeight - obs.height;
+              } else if (obs.type === 'frog' && obs.baseY !== undefined) {
+                obs.baseY = windowHeight - (80 * obs.scale);
+                newY = obs.baseY - Math.abs(Math.sin(newX / 60)) * (180 * obs.scale);
+              } else if (obs.type === 'pendulum' && obs.baseY !== undefined) {
+                // ✅ ไม่มีการล็อค baseY = windowHeight / 2 แล้ว ให้แกว่งตามจุดเกิดที่สุ่มมา
+                newY = obs.baseY + Math.sin(newX / 80) * (150 * obs.scale);
+              }
+
+              return { ...obs, x: newX, y: newY };
+            }).filter(obs => obs.x + obs.width > -100);
+
+            if (gameState === 'playing' && !invincibleRef.current) {
+              for (let obs of movedObstacles) {
+                if (birdX < obs.x + obs.width && birdX + birdSize > obs.x && birdY < obs.y + obs.height && birdY + birdSize > obs.y) {
+                  takeDamage(); break; 
+                }
               }
             }
-          }
-          return movedObstacles;
-        });
+            return movedObstacles;
+          });
 
-        if (mode === 'single' || amIHost) {
-          spawnTimerRef.current -= 1;
-          if (spawnTimerRef.current <= 0) {
-            spawnObstacle(config, uiScale);
-            spawnTimerRef.current = Math.floor(Math.random() * (config.spawnMax - config.spawnMin)) + config.spawnMin; 
+          if (mode === 'single' || amIHost) {
+            spawnTimerRef.current -= 1;
+            if (spawnTimerRef.current <= 0) {
+              spawnObstacle(config, uiScale);
+              spawnTimerRef.current = Math.floor(Math.random() * (config.spawnMax - config.spawnMin)) + config.spawnMin; 
+            }
           }
         }
-
-        requestRef.current = requestAnimationFrame(update)
       }
+      
       requestRef.current = requestAnimationFrame(update)
       return () => cancelAnimationFrame(requestRef.current!)
     }
-  }, [gameState, velocity, hearts, birdPosition, currentMap, windowWidth, windowHeight])
+  }, [gameState, velocity, hearts, birdPosition, currentMap, windowWidth, windowHeight, difficulty, mode, amIHost])
 
   const spawnObstacle = (config: any, scale: number) => {
-    const randomType = config.types[Math.floor(Math.random() * config.types.length)];
+    // 1. ดึง Object รายชื่ออุปสรรคของด่านนี้ออกมา
+    const mapObstacles = currentMap?.allowed_obstacles;
     
-    // ✅ บัค #3: นำค่า Scale มาคูณกับขนาด Width และ Height ตอนสร้างอุปสรรค
-    let obs: Obstacle = { 
-      id: obstacleIdCounter.current++, type: randomType, 
-      x: windowWidth, y: 0, 
-      width: 80 * scale, height: 0, 
-      speedModX: 0, speedModY: 0, scale: scale 
-    };
-
-    if (randomType === 'pipe-top') {
-      obs.height = Math.floor(Math.random() * (windowHeight / 2)) + (50 * scale);
-      obs.y = 0;
-    } else if (randomType === 'pipe-bottom') {
-      obs.height = Math.floor(Math.random() * (windowHeight / 2)) + (50 * scale);
-      obs.y = windowHeight - obs.height;
-    } else if (randomType === 'cloud') {
-      obs.width = 120 * scale; obs.height = 60 * scale;
-      obs.y = Math.floor(Math.random() * (windowHeight - (200 * scale))) + (50 * scale);
-      obs.speedModX = -2;
-    } else if (randomType === 'enemy-bird') {
-      obs.width = 60 * scale; obs.height = 50 * scale;
-      obs.y = Math.floor(Math.random() * (windowHeight - (150 * scale))) + (50 * scale);
-      obs.speedModX = 4;
-    } else if (randomType === 'stalactite') {
-      obs.width = 40 * scale; obs.height = 100 * scale;
-      obs.y = -20;
-      obs.speedModY = 3;
-    } else if (randomType === 'frog') {
-      obs.width = 50 * scale; obs.height = 50 * scale;
-      obs.baseY = windowHeight - (80 * scale);
-      obs.y = obs.baseY;
-      obs.speedModX = -1;
-    } else if (randomType === 'pendulum') {
-      obs.width = 70 * scale; obs.height = 70 * scale;
-      obs.baseY = windowHeight / 2;
-      obs.y = obs.baseY;
-      obs.speedModX = 0;
-    } else if (randomType === 'rocket') {
-      obs.width = 90 * scale; obs.height = 40 * scale;
-      obs.y = myYRef.current;
-      obs.speedModX = 8;
+    // 2. เลือกลิสต์อุปสรรค ตามความยากที่ผู้เล่นเลือก (พร้อมระบบ Fallback ดักบัคกันพัง)
+    let safePool = ['pipe-top', 'pipe-bottom']; 
+    
+    if (mapObstacles) {
+      if (Array.isArray(mapObstacles)) {
+        safePool = mapObstacles;
+      } else if (mapObstacles[difficulty] && mapObstacles[difficulty].length > 0) {
+        safePool = mapObstacles[difficulty];
+      }
     }
+
+    const newObs = generateObstacle(
+      obstacleIdCounter.current++, 
+      safePool, 
+      windowWidth, 
+      windowHeight, 
+      scale, 
+      myYRef.current
+    );
     
-    setObstacles(prev => [...prev, obs]);
+    setObstacles(prev => [...prev, newObs]);
 
     if (mode === 'multi' && amIHost) {
-      channelRef.current?.send({ type: 'broadcast', event: 'spawn_obstacle', payload: obs })
+      channelRef.current?.send({ type: 'broadcast', event: 'spawn_obstacle', payload: newObs })
     }
   }
 
@@ -426,49 +398,18 @@ function PlayEngine() {
 
   return (
     <div className="fixed inset-0 z-[100] w-screen h-screen overflow-hidden bg-[#D0F4FF] select-none m-0 p-0" onClick={jump}>
-      
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.8 } }}
-            className="absolute inset-0 z-[9999] bg-[#8EC5FC] flex flex-col items-center justify-center select-none"
-          >
-            <motion.div
-              animate={{ y: [0, -30, 0] }}
-              transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
-              className="text-7xl md:text-9xl mb-6 drop-shadow-2xl"
-            >
-              🐦
-            </motion.div>
-            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-widest animate-pulse [text-shadow:-3px_-3px_0_#000,3px_-3px_0_#000,-3px_3px_0_#000,3px_3px_0_#000] text-center px-4">
-              Loading Game...
-            </h2>
-            <p className="mt-4 text-white/80 font-bold uppercase tracking-widest text-xs sm:text-sm md:text-base text-center">
-              Preparing your bird for flight
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ⏳ หน้าจอ Loading ก่อนเริ่มเกม */}
+      <LoadingScreen isLoading={isLoading} />
 
       <div className="absolute inset-0 z-0 flex w-[200vw] pointer-events-none">
         <motion.div className="h-full w-[100vw] bg-cover bg-bottom bg-no-repeat" style={{ backgroundImage: `url('${currentMap?.bg_url || '/background_goofy_bird.png'}')` }} animate={gameState === 'playing' || gameState === 'spectating' ? { x: [0, -windowWidth] } : {}} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} />
         <motion.div className="h-full w-[100vw] bg-cover bg-bottom bg-no-repeat -ml-[1px]" style={{ backgroundImage: `url('${currentMap?.bg_url || '/background_goofy_bird.png'}')` }} animate={gameState === 'playing' || gameState === 'spectating' ? { x: [0, -windowWidth] } : {}} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} />
       </div>
 
-      {/* 🚧 วาดอุปสรรค (แก้ไขการสเกลให้สมบูรณ์) */}
+      {/* 🚧 วาดอุปสรรค */}
       {obstacles.map(obs => (
         <div key={obs.id} className="absolute z-10 flex items-center justify-center" style={{ left: obs.x, top: obs.y, width: obs.width, height: obs.height }}>
-          {obs.type === 'pipe-top' && <div className="w-full h-full bg-green-500 border-[4px] sm:border-[6px] border-green-700 rounded-b-xl sm:rounded-b-2xl"><div className="absolute bottom-0 w-[110%] -ml-[5%] h-6 sm:h-8 bg-green-400 border-[4px] sm:border-[6px] border-green-700 rounded-lg sm:rounded-xl"></div></div>}
-          {obs.type === 'pipe-bottom' && <div className="w-full h-full bg-green-500 border-[4px] sm:border-[6px] border-green-700 rounded-t-xl sm:rounded-t-2xl"><div className="absolute top-0 w-[110%] -ml-[5%] h-6 sm:h-8 bg-green-400 border-[4px] sm:border-[6px] border-green-700 rounded-lg sm:rounded-xl"></div></div>}
-          
-          {/* ✅ อุปสรรคอื่นๆ แปลงเป็น Inline Font Size ให้ขยายตาม Scale */}
-          {obs.type === 'cloud' && <div style={{ fontSize: `${60 * obs.scale}px` }} className="opacity-90 leading-none">☁️</div>}
-          {obs.type === 'enemy-bird' && <div style={{ fontSize: `${50 * obs.scale}px` }} className="scale-x-[-1] leading-none">🦅</div>}
-          {obs.type === 'stalactite' && <div style={{ borderWidth: `${obs.height}px ${obs.width/2}px 0 ${obs.width/2}px`, borderColor: '#334155 transparent transparent transparent', borderStyle: 'solid' }} className="w-0 h-0 drop-shadow-md"></div>}
-          {obs.type === 'frog' && <div style={{ fontSize: `${50 * obs.scale}px` }} className="scale-x-[-1] drop-shadow-lg leading-none">🐸</div>}
-          {obs.type === 'pendulum' && <div className="w-full h-full bg-slate-800 rounded-full border-2 sm:border-4 border-slate-500 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center"><div className="w-1/2 h-1/2 bg-red-500 rounded-full animate-pulse"></div></div>}
-          {obs.type === 'rocket' && <div style={{ fontSize: `${50 * obs.scale}px` }} className="scale-x-[-1] drop-shadow-xl leading-none">🚀</div>}
+          <ObstacleRenderer obs={obs} />
         </div>
       ))}
 
@@ -497,53 +438,41 @@ function PlayEngine() {
         </div>
       )}
 
-      {/* 🦅 นกผู้เล่น */}
+      {/* 🦅 นกผู้เล่น (✅ ขยายขนาดตามหน้าจอให้เล่นง่ายขึ้นบน Desktop) */}
       {gameState !== 'gameover' && gameState !== 'spectating' && (
         <div className={`absolute z-40 ${isInvincible ? 'animate-flicker' : ''}`} style={{ left: windowWidth * 0.2, top: birdPosition }}>
-          <div className="w-16 h-16 md:w-20 md:h-20 transition-transform duration-75" style={{ transform: `rotate(${velocity * 3}deg)` }}>
+          <div className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[90px] lg:h-[90px] xl:w-[110px] xl:h-[110px] transition-transform duration-75" style={{ transform: `rotate(${velocity * 3}deg)` }}>
             <img src={playerBird?.image_url} alt="Bird" className="w-full h-full object-contain drop-shadow-2xl" />
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/40 text-white text-[10px] px-2 rounded-full font-bold">YOU</div>
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/40 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">YOU</div>
           </div>
         </div>
       )}
 
       {mode === 'multi' && Object.values(ghostBirds).map((ghost: any) => (
         <div key={ghost.userId} className="absolute z-20 opacity-40 transition-all duration-75 pointer-events-none" style={{ left: windowWidth * 0.2, top: ghost.y }}>
-          <div className="w-16 h-16 md:w-20 md:h-20">
+          <div className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[90px] lg:h-[90px] xl:w-[110px] xl:h-[110px]">
             <img src={ghost.birdUrl || 'https://placehold.co/100x100/png'} alt="Ghost" className="w-full h-full object-contain grayscale-[30%]" />
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#35A7FF]/80 text-white text-[10px] px-2 rounded-full font-bold whitespace-nowrap">{ghost.username}</div>
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#35A7FF]/80 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold whitespace-nowrap">{ghost.username}</div>
           </div>
         </div>
       ))}
 
       <AnimatePresence>
-        {gameState === 'ready' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/10 px-4">
-            <h2 className="text-white text-3xl sm:text-5xl font-black uppercase tracking-widest drop-shadow-lg mb-8 italic">{currentMap?.map_name || 'GOOFY BIRD'}</h2>
-            <p className="text-white text-xl sm:text-3xl font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] animate-pulse drop-shadow-lg bg-[#35A7FF] px-6 sm:px-8 py-3 rounded-full border-4 border-white shadow-[0_4px_0_#288DE0] text-center w-[90%] sm:w-auto">
-              TAP TO START
-            </p>
-          </div>
-        )}
-
+        {gameState === 'ready' && <ReadyModal mapName={currentMap?.map_name} />}
+        
         {gameState === 'gameover' && (
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/70 px-4">
-            <h1 className="text-5xl sm:text-7xl font-black text-white italic drop-shadow-2xl uppercase tracking-tighter mb-4 sm:mb-6 text-center text-red-500 leading-none">GAME OVER</h1>
-            
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 w-full max-w-[300px] sm:max-w-none justify-center">
-               <div className="flex-1 max-w-[200px] bg-slate-800/80 px-4 py-4 sm:px-8 sm:py-6 rounded-3xl border-2 border-slate-600 text-center flex flex-col items-center shadow-xl">
-                 <p className="text-slate-400 font-bold text-[10px] sm:text-[12px] uppercase tracking-widest mb-1">Score</p>
-                 <p className="text-5xl sm:text-6xl font-black text-white leading-none">{score}</p>
-                 <div className="mt-2 text-yellow-400 font-bold text-[10px] sm:text-xs"><Trophy size={12} className="inline mr-1"/> BEST: {highScores[difficulty]}</div>
-               </div>
-               <div className="flex-1 max-w-[200px] bg-yellow-900/80 px-4 py-4 sm:px-8 sm:py-6 rounded-3xl border-2 border-yellow-700 text-center flex flex-col items-center shadow-xl">
-                 <p className="text-yellow-400 font-bold text-[10px] sm:text-[12px] uppercase tracking-widest mb-1">Coins Earned</p>
-                 <p className="text-5xl sm:text-6xl font-black text-yellow-300 flex items-center gap-1 sm:gap-2 leading-none"><Coins className="w-7 h-7 sm:w-9 sm:h-9" /> +{earnedCoins}</p>
-                 <div className="mt-2 text-yellow-400/50 font-bold text-[8px] sm:text-[10px] uppercase">Diff Bonus: x{difficulty === 'hard' ? 2 : (difficulty === 'normal' ? 1.5 : 1)}</div>
-               </div>
-             </div>
-             <button onClick={(e) => { e.stopPropagation(); playClick(); router.push('/'); }} onMouseEnter={playHover} className="bg-white text-slate-800 px-8 py-3 rounded-full font-black text-lg sm:text-xl shadow-lg border-2 border-white hover:scale-105 transition-all cursor-pointer">Main Menu</button>
-          </motion.div>
+          <GameOverModal 
+            score={score}
+            highScore={highScores[difficulty]}
+            earnedCoins={earnedCoins}
+            difficulty={difficulty}
+            onHover={playHover}
+            onMainMenuClick={(e) => { 
+              e.stopPropagation(); 
+              playClick(); 
+              router.push('/'); 
+            }} 
+          />
         )}
       </AnimatePresence>
 
