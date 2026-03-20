@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
-import { Heart, Trophy, Coins, Eye } from 'lucide-react'
+import { Heart, Trophy, Coins, Eye, Users } from 'lucide-react'
 import { useSFX } from '@/hook/useSFX'
 import LoadingScreen from '@/components/gameplay/LoadingScreen'
 import ObstacleRenderer from '@/components/gameplay/ObstacleRenderer'
@@ -12,8 +12,8 @@ import GameOverModal from '@/components/gameplay/GameOverModal'
 import { Obstacle, generateObstacle, DIFFICULTY_CONFIG } from '@/lib/obstacleManager'
 
 const DEFAULT_BIRD_ID = 'e114c607-b017-4ea6-a306-8e5c0808092a'
-const GRAVITY = 0.5;
-const JUMP_STRENGTH = -7;
+const GRAVITY = 0.6;
+const JUMP_STRENGTH = -8;
 const IFRAME_DURATION = 1500;
 
 type Difficulty = 'easy' | 'normal' | 'hard';
@@ -33,12 +33,14 @@ function PlayEngine() {
   const [currentMap, setCurrentMap] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   
-  // ✅ ใช้ Window State แบบ Real-time
   const [windowWidth, setWindowWidth] = useState(0)
   const [windowHeight, setWindowHeight] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
-  const [gameState, setGameState] = useState<'ready' | 'playing' | 'spectating' | 'gameover'>('ready')
+  // ✅ เพิ่ม 'multi_gameover' เข้าไปใน GameState
+  const [gameState, setGameState] = useState<'waiting_host' | 'ready' | 'playing' | 'spectating' | 'gameover' | 'multi_gameover'>(
+    mode === 'multi' ? 'waiting_host' : 'ready'
+  )
   const [difficulty, setDifficulty] = useState<Difficulty>(diffParam)
   const [birdPosition, setBirdPosition] = useState(300)
   const [velocity, setVelocity] = useState(0)
@@ -52,7 +54,11 @@ function PlayEngine() {
 
   const [amIHost, setAmIHost] = useState(false)
   const [ghostBirds, setGhostBirds] = useState<Record<string, any>>({}) 
-  const [playersStatus, setPlayersStatus] = useState<any[]>([])
+  
+  // ✅ ระบบใหม่สำหรับจัดการการตายในโหมด Multi
+  const [deadPlayers, setDeadPlayers] = useState<string[]>([])
+  const [multiGameOverCountdown, setMultiGameOverCountdown] = useState(10)
+  const [multiRestartReady, setMultiRestartReady] = useState(false)
 
   const requestRef = useRef<number>(null);
   const invincibleRef = useRef(false);
@@ -72,13 +78,12 @@ function PlayEngine() {
     return () => clearTimeout(timer)
   }, [])
 
-  // ✅ ระบบตรวจจับขนาดหน้าจอแบบ Real-time
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
       setWindowHeight(window.innerHeight);
     };
-    handleResize(); // เรียกครั้งแรกตอนโหลด
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -159,7 +164,11 @@ function PlayEngine() {
             }
           })
           .on('broadcast', { event: 'player_death' }, ({ payload }) => {
-            setPlayersStatus(prev => [...prev, payload.userId])
+            // ✅ เก็บรายชื่อคนตาย
+            setDeadPlayers(prev => prev.includes(payload.userId) ? prev : [...prev, payload.userId])
+          })
+          .on('broadcast', { event: 'start_game' }, () => {
+            setGameState('ready')
           })
           .subscribe()
 
@@ -185,6 +194,46 @@ function PlayEngine() {
     }
   }, [])
 
+  // 🛑 ตรวจจับว่า "ทุกคนในห้องตายหมดหรือยัง"
+  useEffect(() => {
+    if (mode === 'multi' && (gameState === 'spectating' || gameState === 'playing')) {
+      const totalPlayers = 1 + Object.keys(ghostBirds).length; // เรา + เพื่อน
+      if (deadPlayers.length >= totalPlayers && totalPlayers > 0) {
+        setGameState('multi_gameover');
+      }
+    }
+  }, [deadPlayers, ghostBirds, mode, gameState]);
+
+  // ⏳ นับถอยหลัง 10 วิ เมื่อทุกคนตายหมด
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gameState === 'multi_gameover') {
+      if (multiGameOverCountdown > 0) {
+        timer = setTimeout(() => setMultiGameOverCountdown(prev => prev - 1), 1000);
+      } else {
+        // หมดเวลา 10 วิ
+        if (multiRestartReady) {
+          // รีเซ็ตเกมเพื่อเล่นรอบใหม่
+          setScore(0);
+          scoreRef.current = 0;
+          setHearts(3);
+          setObstacles([]);
+          obstacleIdCounter.current = 0;
+          setBirdPosition(windowHeight / 2);
+          setVelocity(0);
+          setDeadPlayers([]);
+          setMultiGameOverCountdown(10);
+          setMultiRestartReady(false);
+          setGameState('ready'); // กลับไปรอที่หน้า Tap to start
+        } else {
+          // ไม่ได้กด Ready -> เตะออก
+          router.push('/');
+        }
+      }
+    }
+    return () => clearTimeout(timer);
+  }, [gameState, multiGameOverCountdown, multiRestartReady, windowHeight, router]);
+
   useEffect(() => {
     const updatePlayVolume = () => {
       if (bgmRef.current) {
@@ -200,6 +249,8 @@ function PlayEngine() {
   const handleGameOver = async () => {
     if (mode === 'multi') {
       channelRef.current?.send({ type: 'broadcast', event: 'player_death', payload: { userId: currentUser?.id } })
+      // บันทึกตัวเองว่าตายแล้ว
+      setDeadPlayers(prev => prev.includes(currentUser?.id) ? prev : [...prev, currentUser?.id])
       setGameState('spectating') 
       return
     }
@@ -233,7 +284,7 @@ function PlayEngine() {
   };
 
   const takeDamage = () => {
-    if (invincibleRef.current || gameState === 'spectating' || gameState === 'gameover') return;
+    if (invincibleRef.current || gameState === 'spectating' || gameState === 'gameover' || gameState === 'multi_gameover') return;
     playHit();
 
     invincibleRef.current = true;
@@ -250,7 +301,7 @@ function PlayEngine() {
   };
 
   const jump = () => {
-    if (isLoading || gameState === 'spectating' || gameState === 'gameover') return;
+    if (isLoading || gameState === 'waiting_host' || gameState === 'spectating' || gameState === 'gameover' || gameState === 'multi_gameover') return;
     
     if (gameState === 'ready') {
       setGameState('playing');
@@ -267,13 +318,13 @@ function PlayEngine() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [gameState, isLoading])
 
-  // 🌀 Game Engine Loop (✅ อัปเกรดระบบ FPS Capping กันหน้าจอ 144Hz)
+  // 🌀 Game Engine Loop
   useEffect(() => {
     if ((gameState === 'playing' || gameState === 'spectating') && hearts > 0) {
       const config = DIFFICULTY_CONFIG[difficulty];
       
       let lastTime = performance.now();
-      const targetFPS = 144;
+      const targetFPS = 100;
       const frameInterval = 1000 / targetFPS;
 
       const update = (currentTime: number) => {
@@ -288,10 +339,9 @@ function PlayEngine() {
             setScore(scoreRef.current);
           }
 
-          // ✅ ปรับ Scale ใหม่ให้ Desktop ใหญ่สะใจขึ้น
-          const uiScale = windowWidth < 768 ? 0.7 : (windowWidth < 1024 ? 1.0 : (windowWidth < 1440 ? 1.3 : 1.6));
+          const uiScale = windowWidth < 768 ? 0.5 : (windowWidth < 1024 ? 0.7 : (windowWidth < 1440 ? 0.9 : 1.1));
           const screenSpeedRatio = windowWidth / 1000;
-          const currentSpeed = config.speed * screenSpeedRatio;
+          const currentSpeed = (config.speed * screenSpeedRatio) * 1.5; 
 
           if (gameState === 'playing') {
             setBirdPosition((pos) => {
@@ -318,8 +368,7 @@ function PlayEngine() {
             const birdX = windowWidth * 0.2;
             const birdY = birdPosition;
             
-            // ✅ ให้ Hitbox นกขยายตาม uiScale ด้วย จะได้ชนเป๊ะๆ
-            const birdSize = 50 * uiScale;
+            const birdSize = 40 * uiScale;
 
             const movedObstacles = prevObstacles.map(obs => {
               let newX = obs.x - (currentSpeed + (obs.speedModX * screenSpeedRatio));
@@ -331,8 +380,7 @@ function PlayEngine() {
                 obs.baseY = windowHeight - (80 * obs.scale);
                 newY = obs.baseY - Math.abs(Math.sin(newX / 60)) * (180 * obs.scale);
               } else if (obs.type === 'pendulum' && obs.baseY !== undefined) {
-                // ✅ ไม่มีการล็อค baseY = windowHeight / 2 แล้ว ให้แกว่งตามจุดเกิดที่สุ่มมา
-                newY = obs.baseY + Math.sin(newX / 80) * (150 * obs.scale);
+                newY = obs.baseY + Math.sin(newX / 150) * (150 * obs.scale);
               }
 
               return { ...obs, x: newX, y: newY };
@@ -364,10 +412,7 @@ function PlayEngine() {
   }, [gameState, velocity, hearts, birdPosition, currentMap, windowWidth, windowHeight, difficulty, mode, amIHost])
 
   const spawnObstacle = (config: any, scale: number) => {
-    // 1. ดึง Object รายชื่ออุปสรรคของด่านนี้ออกมา
     const mapObstacles = currentMap?.allowed_obstacles;
-    
-    // 2. เลือกลิสต์อุปสรรค ตามความยากที่ผู้เล่นเลือก (พร้อมระบบ Fallback ดักบัคกันพัง)
     let safePool = ['pipe-top', 'pipe-bottom']; 
     
     if (mapObstacles) {
@@ -398,7 +443,6 @@ function PlayEngine() {
 
   return (
     <div className="fixed inset-0 z-[100] w-screen h-screen overflow-hidden bg-[#D0F4FF] select-none m-0 p-0" onClick={jump}>
-      {/* ⏳ หน้าจอ Loading ก่อนเริ่มเกม */}
       <LoadingScreen isLoading={isLoading} />
 
       <div className="absolute inset-0 z-0 flex w-[200vw] pointer-events-none">
@@ -406,7 +450,6 @@ function PlayEngine() {
         <motion.div className="h-full w-[100vw] bg-cover bg-bottom bg-no-repeat -ml-[1px]" style={{ backgroundImage: `url('${currentMap?.bg_url || '/background_goofy_bird.png'}')` }} animate={gameState === 'playing' || gameState === 'spectating' ? { x: [0, -windowWidth] } : {}} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} />
       </div>
 
-      {/* 🚧 วาดอุปสรรค */}
       {obstacles.map(obs => (
         <div key={obs.id} className="absolute z-10 flex items-center justify-center" style={{ left: obs.x, top: obs.y, width: obs.width, height: obs.height }}>
           <ObstacleRenderer obs={obs} />
@@ -417,7 +460,7 @@ function PlayEngine() {
         <div className="absolute bottom-0 w-full h-12 bg-gradient-to-t from-red-600/80 to-transparent z-30 animate-pulse pointer-events-none" />
       )}
 
-      {(gameState === 'playing' || gameState === 'spectating' || gameState === 'gameover') && (
+      {(gameState === 'playing' || gameState === 'spectating' || gameState === 'gameover' || gameState === 'multi_gameover') && (
         <div className="absolute top-10 w-full text-center z-50 pointer-events-none flex flex-col items-center">
           <h2 className="text-6xl md:text-8xl font-black text-white drop-shadow-[0_5px_0_rgba(0,0,0,0.3)] tracking-tighter" style={{ WebkitTextStroke: '2px #35A7FF' }}>{score}</h2>
           {gameState === 'spectating' && (
@@ -438,10 +481,9 @@ function PlayEngine() {
         </div>
       )}
 
-      {/* 🦅 นกผู้เล่น (✅ ขยายขนาดตามหน้าจอให้เล่นง่ายขึ้นบน Desktop) */}
-      {gameState !== 'gameover' && gameState !== 'spectating' && (
+      {gameState !== 'gameover' && gameState !== 'spectating' && gameState !== 'multi_gameover' && (
         <div className={`absolute z-40 ${isInvincible ? 'animate-flicker' : ''}`} style={{ left: windowWidth * 0.2, top: birdPosition }}>
-          <div className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[90px] lg:h-[90px] xl:w-[110px] xl:h-[110px] transition-transform duration-75" style={{ transform: `rotate(${velocity * 3}deg)` }}>
+          <div className="w-[40px] h-[40px] md:w-[50px] md:h-[50px] lg:w-[65px] lg:h-[65px] xl:w-[80px] xl:h-[80px] transition-transform duration-75" style={{ transform: `rotate(${velocity * 3}deg)` }}>
             <img src={playerBird?.image_url} alt="Bird" className="w-full h-full object-contain drop-shadow-2xl" />
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/40 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">YOU</div>
           </div>
@@ -449,18 +491,88 @@ function PlayEngine() {
       )}
 
       {mode === 'multi' && Object.values(ghostBirds).map((ghost: any) => (
-        <div key={ghost.userId} className="absolute z-20 opacity-40 transition-all duration-75 pointer-events-none" style={{ left: windowWidth * 0.2, top: ghost.y }}>
-          <div className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[90px] lg:h-[90px] xl:w-[110px] xl:h-[110px]">
-            <img src={ghost.birdUrl || 'https://placehold.co/100x100/png'} alt="Ghost" className="w-full h-full object-contain grayscale-[30%]" />
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#35A7FF]/80 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold whitespace-nowrap">{ghost.username}</div>
+        <div key={ghost.userId} className="absolute z-20 opacity-30 transition-all duration-75 pointer-events-none" style={{ left: windowWidth * 0.2, top: ghost.y }}>
+          <div className="w-[40px] h-[40px] md:w-[50px] md:h-[50px] lg:w-[65px] lg:h-[65px] xl:w-[80px] xl:h-[80px]">
+            <img src={ghost.birdUrl || 'https://placehold.co/100x100/png'} alt="Ghost" className="w-full h-full object-contain grayscale-[50%]" />
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#35A7FF] text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold whitespace-nowrap shadow-md">{ghost.username}</div>
           </div>
         </div>
       ))}
 
       <AnimatePresence>
+        {gameState === 'waiting_host' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 flex flex-col items-center justify-center z-40 bg-black/60 px-4 backdrop-blur-sm">
+            <h2 className="text-white text-3xl md:text-5xl font-black uppercase tracking-widest drop-shadow-lg mb-4 text-center">
+              Waiting for Players
+            </h2>
+            
+            <div className="bg-white/10 p-6 rounded-2xl border-2 border-white/20 mb-8 flex flex-col items-center min-w-[300px]">
+              <p className="text-[#35A7FF] font-black text-xl mb-4 flex items-center gap-2">
+                <Users size={24}/> Players in Room: {Object.keys(ghostBirds).length + 1}
+              </p>
+              
+              <div className="flex flex-wrap gap-2 justify-center">
+                 <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">You: {currentUser?.username}</span>
+                 {Object.values(ghostBirds).map((ghost: any) => (
+                   <span key={ghost.userId} className="bg-slate-700 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                     {ghost.username}
+                   </span>
+                 ))}
+              </div>
+            </div>
+
+            {amIHost ? (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  playClick();
+                  channelRef.current?.send({ type: 'broadcast', event: 'start_game' });
+                  setGameState('ready');
+                }}
+                className="bg-yellow-400 text-yellow-900 px-10 py-4 rounded-full font-black text-2xl uppercase tracking-widest shadow-[0_6px_0_#A16207] hover:translate-y-1 hover:shadow-[0_2px_0_#A16207] transition-all"
+              >
+                Start Game
+              </button>
+            ) : (
+              <p className="text-white text-xl font-bold animate-pulse">Waiting for Host to start...</p>
+            )}
+          </motion.div>
+        )}
+
+        {/* ✅ Modal 10 วินาที เมื่อทุกคนตายหมด */}
+        {gameState === 'multi_gameover' && (
+          <div className="absolute inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="bg-white p-6 sm:p-8 rounded-[2em] max-w-sm w-full text-center border-4 border-[#35A7FF] shadow-2xl">
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-2 uppercase italic tracking-tighter">Game Over</h2>
+              <p className="text-slate-500 font-bold mb-4 text-xs sm:text-sm uppercase tracking-widest">All players have died.</p>
+              
+              <div className="text-7xl sm:text-8xl font-black text-[#FF5F5F] mb-6 animate-pulse drop-shadow-md">
+                {multiGameOverCountdown}
+              </div>
+
+              <div className="flex gap-3 sm:gap-4">
+                <button 
+                  onClick={() => { playClick(); router.push('/') }} 
+                  className="flex-1 bg-slate-100 text-slate-500 py-3 sm:py-4 rounded-xl font-black uppercase text-xs sm:text-sm hover:bg-slate-200 border-2 border-slate-200 transition-all active:scale-95"
+                >
+                  Menu
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); playClick(); setMultiRestartReady(true) }} 
+                  disabled={multiRestartReady}
+                  className={`flex-1 py-3 sm:py-4 rounded-xl font-black uppercase text-xs sm:text-sm shadow-[0_4px_0_rgba(0,0,0,0.2)] transition-all active:translate-y-1 active:shadow-none ${multiRestartReady ? 'bg-green-500 text-white shadow-none translate-y-1' : 'bg-[#FFD151] text-white hover:bg-[#FABC05]'}`}
+                >
+                  {multiRestartReady ? 'Ready!' : 'Play Again'}
+                </button>
+              </div>
+              {multiRestartReady && <p className="text-green-500 font-bold mt-4 text-xs sm:text-sm animate-pulse">Waiting for countdown...</p>}
+            </div>
+          </div>
+        )}
+
         {gameState === 'ready' && <ReadyModal mapName={currentMap?.map_name} />}
         
-        {gameState === 'gameover' && (
+        {gameState === 'gameover' && mode === 'single' && (
           <GameOverModal 
             score={score}
             highScore={highScores[difficulty]}
