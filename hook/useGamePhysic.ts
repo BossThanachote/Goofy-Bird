@@ -131,10 +131,18 @@ export function useGamePhysics({
   const spawnObstacle = (config: any, scale: number) => {
     const mapObstacles = currentMap?.allowed_obstacles;
     let safePool = ['pipe-top', 'pipe-bottom']; 
+    
     if (mapObstacles) {
       if (Array.isArray(mapObstacles)) safePool = mapObstacles;
       else if (mapObstacles[difficulty] && mapObstacles[difficulty].length > 0) safePool = mapObstacles[difficulty];
     }
+
+    // 🔥 ทริคโกงเรทกาชา: ถ้าเป็นโหมดยาก ให้ยัด "ท่อ" ลงไปในกองสุ่มเพิ่มอีก 2 เท่า!
+    // ทำให้เวลาสุ่ม (Math.random) โอกาสที่จะหยิบโดนท่อจะสูงกว่าอุปสรรคอื่นๆ มากครับ
+    if (difficulty === 'hard') {
+      safePool = [...safePool, 'pipe-top', 'pipe-bottom', 'pipe-top', 'pipe-bottom'];
+    }
+
     const uniqueId = obstacleIdCounter.current++ + Math.floor(Math.random() * 1000000);
     const gapY = isDeadRef.current ? windowHeight / 2 : myYRef.current;
     
@@ -180,14 +188,41 @@ export function useGamePhysics({
             scoreRef.current += 1; setScore(scoreRef.current);
           }
 
+          // ... (โค้ดอัปเดตนกอยู่ด้านบน) ...
+
           setObstacles((prevObstacles) => {
             const birdX = windowWidth * 0.2; const birdY = birdPosition; const birdSize = 40 * uiScale;
             const movedObstacles = prevObstacles.map(obs => {
               let newX = obs.x - (currentSpeed + (obs.speedModX * screenSpeedRatio));
               let newY = obs.y + (obs.speedModY * screenSpeedRatio);
-              if (obs.type === 'pipe-bottom') newY = windowHeight - obs.height;
-              else if (obs.type === 'frog' && obs.baseY !== undefined) { obs.baseY = windowHeight - (80 * obs.scale); newY = obs.baseY - Math.abs(Math.sin(newX / 60)) * (180 * obs.scale); } 
-              else if (obs.type === 'pendulum' && obs.baseY !== undefined) newY = obs.baseY + Math.sin(newX / 150) * (150 * obs.scale);
+
+              // ✅ 1. ท่อล่าง บังคับให้ติดพื้นเสมอ
+              if (obs.type === 'pipe-bottom') {
+                newY = windowHeight - obs.height;
+              }
+              // ✅ 2. ท่อบน บังคับให้ติดเพดาน
+              else if (obs.type === 'pipe-top') {
+                newY = 0; 
+              }
+              // ✅ 3. หินย้อย (Stalactite) เกาะเพดานรอก่อน พอเข้ามาใกล้หน้าจอค่อยร่วงใส่หัว!
+              else if (obs.type === 'stalactite') {
+                // นกเราอยู่ตำแหน่งที่ 0.2 ของจอ ถ้าหินย้อยเข้ามาถึงระยะ 0.7 ของจอ ให้เริ่มร่วง
+                if (obs.x < windowWidth * 0.7) {
+                  newY = obs.y + (12 * screenSpeedRatio); // ความเร็วตอนร่วงดิ่งลงมา
+                } else {
+                  newY = 0; // แอบซุ่มรออยู่ที่เพดาน
+                }
+              }
+              // ✅ 4. กบ ให้กระโดดเด้งดึ๋งจากพื้น
+              else if (obs.type === 'frog' && obs.baseY !== undefined) { 
+                obs.baseY = windowHeight - (80 * obs.scale); 
+                newY = obs.baseY - Math.abs(Math.sin(newX / 60)) * (180 * obs.scale); 
+              } 
+              // ✅ 5. กงจักร ให้แกว่งไปมาตามสมการไซน์
+              else if (obs.type === 'pendulum' && obs.baseY !== undefined) { 
+                newY = obs.baseY + Math.sin(newX / 150) * (150 * obs.scale); 
+              }
+
               return { ...obs, x: newX, y: newY };
             }).filter(obs => obs.x + obs.width > -100);
 
@@ -200,6 +235,8 @@ export function useGamePhysics({
             }
             return movedObstacles;
           });
+
+          // ... (โค้ดเสกอุปสรรคอยู่ด้านล่าง) ...
 
           if (mode === 'single' || amIHost) {
             spawnTimerRef.current -= 1;

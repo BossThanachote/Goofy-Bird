@@ -17,7 +17,7 @@ export interface Obstacle {
 export const DIFFICULTY_CONFIG = {
   easy: { speed: 3, spawnMin: 80, spawnMax: 130 },
   normal: { speed: 5, spawnMin: 50, spawnMax: 90 },
-  hard: { speed: 7, spawnMin: 30, spawnMax: 60 }
+  hard: { speed: 7, spawnMin: 20, spawnMax: 40 }
 };
 
 // นอกนั้นโค้ดฟังก์ชัน generateObstacle ปล่อยไว้เหมือนเดิมเป๊ะๆ เลยครับ

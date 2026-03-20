@@ -37,6 +37,9 @@ function PlayEngine() {
   const [currentMap, setCurrentMap] = useState<any>(null)
   const [highScores, setHighScores] = useState({ easy: 0, normal: 0, hard: 0 })
   
+  // ✅ 1. เพิ่ม State เก็บความยาก เพื่อให้ดึงค่าจากระบบห้อง Multi มาอัปเดตได้
+  const [difficulty, setDifficulty] = useState<Difficulty>(diffParam)
+
   const [windowWidth, setWindowWidth] = useState(0)
   const [windowHeight, setWindowHeight] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -46,7 +49,6 @@ function PlayEngine() {
   )
   const [countdownTimer, setCountdownTimer] = useState(3) 
 
-  // ✅ 1. ดัน State และ Ref ที่ใช้ร่วมกันขึ้นมาไว้ตรงนี้ (Lifting State Up)
   const [obstacles, setObstacles] = useState<Obstacle[]>([])
   const myYRef = useRef(300);
   const invincibleRef = useRef(false);
@@ -58,23 +60,19 @@ function PlayEngine() {
 
   useEffect(() => { gameStateRef.current = gameState; }, [gameState]);
 
-  // 🌐 2. ส่งต่อตัวแปรให้เน็ตเวิร์ค
   const sync = useMultiplayerSync({
     mode, roomId, currentUser, birdData: playerBird, myYRef, 
     invincibleRef, isDeadRef, gameStateRef, gameState,
     setGameState, setObstacles, bgmRef, gameOverSfxRef
   });
 
-  // ⚙️ 3. ส่งต่อตัวแปรให้สมองกลฟิสิกส์ (รับข้อมูลจาก sync มาใส่ตรงๆ)
- const physics = useGamePhysics({
-    mode, difficulty: diffParam, gameState, setGameState, windowWidth, windowHeight,
+  const physics = useGamePhysics({
+    mode, difficulty, gameState, setGameState, windowWidth, windowHeight, // ✅ เปลี่ยนไปใช้ตัวแปร State 'difficulty' แทน
     currentMap, currentUser, amIHost: sync.amIHost, channelRef: sync.channelRef, highScores, setHighScores,
     setDeadPlayers: sync.setDeadPlayers, isDeadRef, bgmRef, gameOverSfxRef, isLoading,
     obstacles, setObstacles, myYRef, invincibleRef,
-    playJump, playHit // ✅ เสียบสายไฟเสียงเข้าไปตรงนี้ครับ!
+    playJump, playHit 
   });
-
-  // ลบโค้ดวิชามาร (physics.amIHost = ...) ทิ้งไปเลย! ไม่มีบัคแล้วครับ
 
   useEffect(() => {
     const handleResize = () => { setWindowWidth(window.innerWidth); setWindowHeight(window.innerHeight); };
@@ -99,8 +97,19 @@ function PlayEngine() {
       const { data: birdData } = await supabase.from('characters').select('*').eq('character_id', targetBirdId).maybeSingle()
       if (birdData) setPlayerBird(birdData)
 
-      if (mapId) {
-        const { data } = await supabase.from('maps').select('*').eq('id', mapId).single()
+      // ✅ 2. อัปเกรดระบบดึงข้อมูล: ถ้าเป็นห้อง Multi ให้ไปค้นหา Map ID และระดับความยากจากห้องก่อน!
+      let targetMapId = mapId;
+      if (mode === 'multi' && roomId) {
+        const { data: roomData } = await supabase.from('rooms').select('map_id, difficulty').eq('id', roomId).single();
+        if (roomData) {
+          targetMapId = roomData.map_id; // ได้ Map ID ที่แท้จริงมาแล้ว!
+          if (roomData.difficulty) setDifficulty(roomData.difficulty as Difficulty);
+        }
+      }
+
+      // ✅ 3. โหลดแผนที่และอุปสรรคทั้งหมด (กบ, กงจักร จะมาครบก็ตรงนี้แหละ!)
+      if (targetMapId) {
+        const { data } = await supabase.from('maps').select('*').eq('id', targetMapId).single()
         setCurrentMap(data)
         const bgmTrigger = data?.bgm_trigger || 'bgm_default_gameplay'
         const { data: soundData } = await supabase.from('sounds').select('action_trigger, file_url, base_volume').in('action_trigger', [bgmTrigger, 'sfx_gameover']).eq('is_active', true).eq('is_deleted', false);
@@ -114,7 +123,7 @@ function PlayEngine() {
     }
     initGame()
     return () => { if (bgmRef.current) bgmRef.current.pause(); }
-  }, [mapId])
+  }, [mapId, roomId, mode]) // ✅ สั่งให้รีโหลดใหม่ถ้าค่าเหล่านี้เปลี่ยน
 
   useEffect(() => {
     if (gameState === 'trigger_reset') {
@@ -146,7 +155,7 @@ function PlayEngine() {
   if (windowWidth === 0) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] w-screen h-screen overflow-hidden bg-[#D0F4FF] select-none m-0 p-0" onClick={() => { playJump(); physics.jump(); }}>
+    <div className="fixed inset-0 z-[100] w-screen h-screen overflow-hidden bg-[#D0F4FF] select-none m-0 p-0" onClick={() => { physics.jump(); }}>
       <LoadingScreen isLoading={isLoading} />
 
       <div className="absolute inset-0 z-0 flex w-[200vw] pointer-events-none">
@@ -192,7 +201,9 @@ function PlayEngine() {
         {gameState === 'waiting_host' && <WaitingLobby ghostBirds={sync.ghostBirds} currentUser={currentUser} amIHost={sync.amIHost} onStartGame={(e) => { e.stopPropagation(); playClick(); setObstacles([]); sync.channelRef.current?.send({ type: 'broadcast', event: 'start_countdown' }); setGameState('trigger_reset'); }} />}
         {gameState === 'multi_gameover' && <MultiGameOverModal earnedCoins={physics.earnedCoins} currentUser={currentUser} ghostBirds={sync.ghostBirds} multiPlayerDecisions={sync.multiPlayerDecisions} multiRestartReady={sync.multiRestartReady} multiGameOverCountdown={sync.multiGameOverCountdown} onDecision={(decision, e) => { if (e) e.stopPropagation(); playClick(); sync.handleMultiDecision(decision); }} />}
         {gameState === 'ready' && <ReadyModal mapName={currentMap?.map_name} />}
-        {gameState === 'gameover' && mode === 'single' && <GameOverModal score={physics.score} highScore={highScores[diffParam]} earnedCoins={physics.earnedCoins} difficulty={diffParam} onHover={playHover} onMainMenuClick={(e) => { e.stopPropagation(); playClick(); router.push('/'); }} />}
+        
+        {/* ✅ ส่ง Difficulty ที่อัปเดตแล้วเข้าไปให้ GameOverModal ด้วย */}
+        {gameState === 'gameover' && mode === 'single' && <GameOverModal score={physics.score} highScore={highScores[difficulty]} earnedCoins={physics.earnedCoins} difficulty={difficulty} onHover={playHover} onMainMenuClick={(e) => { e.stopPropagation(); playClick(); router.push('/'); }} />}
       </AnimatePresence>
 
       <div className="absolute top-8 left-4 sm:left-8 z-50">
