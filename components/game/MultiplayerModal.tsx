@@ -271,13 +271,13 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
 
           {/* ✅ จำกัดความสูง max-h ไว้ที่ 90vh ป้องกันการล้นจอ */}
           <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} 
-          className="relative bg-[#F8FAFC] w-full max-w-3xl rounded-[2.5em] sm:rounded-[3em] shadow-2xl p-4 sm:p-6 border-[6px] border-white flex flex-col max-h-[90vh] overflow-hidden">
+          className="relative bg-[#F8FAFC] w-full max-w-3xl rounded-[2.5em] sm:rounded-[3em] shadow-2xl p-4 sm:p-6  border-[6px] border-white flex flex-col max-h-[90vh] overflow-hidden">
             
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#FF5F5F]/5 rounded-full pointer-events-none" />
             <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#35A7FF]/5 rounded-full pointer-events-none" />
 
             {view !== 'lobby' && (
-              <button onClick={() => { playBack(); onClose() }} onMouseEnter={playHover} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 sm:p-3 bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full shadow-sm z-50 transition-all cursor-pointer shrink-0">
+              <button onClick={() => { playBack(); onClose() }} onMouseEnter={playHover} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 sm:p-3 bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full shadow-sm z-50 transition-all cursor-pointer  shrink-0">
                 <X size={20} className="sm:w-6 sm:h-6" />
               </button>
             )}
@@ -294,7 +294,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full px-2 sm:px-8 mt-2 sm:mt-4 shrink-0">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full px-2 sm:px-8 mt-2 mb-2 sm:mt-4 shrink-0">
                   <button onClick={() => { playClick(); setView('create') }} onMouseEnter={playHover} className="relative flex-1 bg-gradient-to-b from-[#4DB8FF] to-[#1E8FE1] text-white p-6 sm:p-10 rounded-[2em] shadow-[0_8px_0_#156CAE] hover:translate-y-1 hover:shadow-[0_4px_0_#156CAE] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 border-4 border-white group overflow-hidden cursor-pointer">
                     <div className="absolute -right-6 -top-6 text-white opacity-20 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500"><Users size={120} /></div>
                     <div className="bg-white/30 p-3 sm:p-4 rounded-full mb-2 z-10 border-2 border-white/40 shadow-inner"><Users size={32} className="sm:w-10 sm:h-10" /></div>
@@ -320,7 +320,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
                 <h2 className="text-2xl sm:text-4xl font-black text-[#35A7FF] uppercase italic tracking-tighter mb-3 sm:mb-4 text-center shrink-0">Room Settings</h2>
                 
                 {/* ✅ โซนตั้งค่า ที่สามารถเลื่อน (Scroll) ได้ถ้ายาวเกินจอ */}
-                <div className="flex-1 space-y-3 sm:space-y-4 bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[2em] border-2 border-slate-100 shadow-sm overflow-y-auto custom-scrollbar pr-2 min-h-0">
+                <div className="flex-1 space-y-3 sm:space-y-4 bg-white p-3 sm:p-6  rounded-2xl sm:rounded-[2em] border-2 border-slate-100 shadow-sm overflow-y-auto custom-scrollbar pr-2 min-h-0">
                   
                   {/* 🗺️ ระบบเลือกด่านแบบลูกศร ซ้าย-ขวา */}
                   <div className="bg-slate-50 p-3 rounded-xl sm:rounded-2xl border-2 border-slate-100">
@@ -394,7 +394,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
                 </div>
 
                 {/* ✅ ปุ่ม Create Room ถูกย้ายออกมานอก Scroll โซน ทำให้มันลอยอยู่ด้านล่างเสมอ ไม่มีวันตกขอบ */}
-                <div className="shrink-0 mt-3 sm:mt-4">
+                <div className="shrink-0 mt-3 sm:mt-4 mb-2">
                   <button onClick={() => { playClick(); handleCreateRoom()}} onMouseEnter={playHover} disabled={loading || maps.length === 0} className="w-full bg-[#FF5F5F] hover:bg-[#ff4d4d] text-white py-3 sm:py-4 rounded-full font-black text-sm sm:text-lg uppercase tracking-widest shadow-[0_4px_0_#D14848] active:translate-y-1 active:shadow-none disabled:opacity-50 transition-all cursor-pointer">
                     {loading ? 'Creating...' : 'Create Room'}
                   </button>
@@ -485,7 +485,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
                   })}
                 </div>
 
-                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t-2 border-slate-200 flex gap-2 sm:gap-4 shrink-0">
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 mb-3 border-t-2 border-slate-200 flex gap-2 sm:gap-4 shrink-0">
                   <button onClick={() => { playClick(); toggleReady() }} onMouseEnter={playHover} className={`flex-1 py-2.5 sm:py-3.5 rounded-full font-black text-xs sm:text-sm uppercase tracking-widest shadow-[0_4px_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all cursor-pointer ${isReady ? 'bg-orange-400 text-white' : 'bg-green-500 text-white'}`}>
                     {isReady ? 'Cancel Ready' : 'Ready!'}
                   </button>
