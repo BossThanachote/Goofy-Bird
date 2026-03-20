@@ -15,9 +15,9 @@ export interface Obstacle {
 
 
 export const DIFFICULTY_CONFIG = {
-  easy: { speed: 5, spawnMin: 80, spawnMax: 130 },
-  normal: { speed: 7, spawnMin: 50, spawnMax: 90 },
-  hard: { speed: 10, spawnMin: 30, spawnMax: 60 }
+  easy: { speed: 3, spawnMin: 80, spawnMax: 130 },
+  normal: { speed: 5, spawnMin: 50, spawnMax: 90 },
+  hard: { speed: 7, spawnMin: 30, spawnMax: 60 }
 };
 
 // นอกนั้นโค้ดฟังก์ชัน generateObstacle ปล่อยไว้เหมือนเดิมเป๊ะๆ เลยครับ
@@ -40,10 +40,10 @@ export const generateObstacle = (
   };
 
   if (randomType === 'pipe-top') {
-    obs.height = Math.floor(Math.random() * (windowHeight / 2)) + (50 * scale);
+    obs.height = Math.floor(Math.random() * (windowHeight / 2)) + (80 * scale);
     obs.y = 0;
   } else if (randomType === 'pipe-bottom') {
-    obs.height = Math.floor(Math.random() * (windowHeight / 2)) + (50 * scale);
+    obs.height = Math.floor(Math.random() * (windowHeight / 2)) + (80 * scale);
     obs.y = windowHeight - obs.height;
   } else if (randomType === 'cloud') {
     obs.width = 120 * scale; obs.height = 60 * scale;
@@ -63,8 +63,8 @@ export const generateObstacle = (
     obs.y = obs.baseY;
     obs.speedModX = -1;
  } else if (randomType === 'pendulum') {
-    obs.width = 70 * scale; 
-    obs.height = 70 * scale;
+    obs.width = 30 * scale; 
+    obs.height = 30 * scale;
     // ✅ สุ่มจุดกึ่งกลาง (baseY) ให้อยู่ระหว่าง 20% ถึง 80% ของหน้าจอ
     // มันจะไม่เกิดกลางจอเป๊ะๆ อีกต่อไป จะมีห้อยมาจากข้างบนบ้าง โผล่มาจากข้างล่างบ้าง
     obs.baseY = (windowHeight * 0.2) + (Math.random() * (windowHeight * 0.6));
