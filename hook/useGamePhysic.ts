@@ -129,18 +129,35 @@ export function useGamePhysics({
   };
 
   const spawnObstacle = (config: any, scale: number) => {
-    const mapObstacles = currentMap?.allowed_obstacles;
+    // 1. ลองดึงข้อมูล allowed_obstacles จาก currentMap ดูก่อน
+    let mapObstacles = currentMap?.allowed_obstacles;
+    
+    // 2. ตั้งค่า Default เผื่อเกิดข้อผิดพลาด
     let safePool = ['pipe-top', 'pipe-bottom']; 
+
     if (mapObstacles) {
-      if (Array.isArray(mapObstacles)) safePool = mapObstacles;
-      else if (mapObstacles[difficulty] && mapObstacles[difficulty].length > 0) safePool = mapObstacles[difficulty];
+      // 3. ถ้าเป็นโครงสร้างเก่าแบบ Array (เผื่อไว้)
+      if (Array.isArray(mapObstacles) && mapObstacles.length > 0) { 
+        safePool = mapObstacles; 
+      } 
+      // 4. ✅ ถ้าเป็นโครงสร้างใหม่แบบ Object { easy: [...], normal: [...], hard: [...] }
+      else if (typeof mapObstacles === 'object' && mapObstacles !== null) {
+        // เช็คว่ามีความยากนี้อยู่ใน object หรือไม่ และมีข้อมูลข้างในไหม
+        if (mapObstacles[difficulty] && Array.isArray(mapObstacles[difficulty]) && mapObstacles[difficulty].length > 0) {
+          safePool = mapObstacles[difficulty];
+        }
+      }
     }
+
     const uniqueId = obstacleIdCounter.current++ + Math.floor(Math.random() * 1000000);
     const gapY = isDeadRef.current ? windowHeight / 2 : myYRef.current;
     
     const newObs = generateObstacle(uniqueId, safePool, windowWidth, windowHeight, scale, gapY);
     setObstacles(prev => [...prev, newObs]);
-    if (mode === 'multi' && amIHost) channelRef.current?.send({ type: 'broadcast', event: 'spawn_obstacle', payload: newObs });
+    
+    if (mode === 'multi' && amIHost) {
+      channelRef.current?.send({ type: 'broadcast', event: 'spawn_obstacle', payload: newObs });
+    }
   };
 
   useEffect(() => {
