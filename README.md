@@ -28,19 +28,25 @@ Goofy Bird! เกมเว็บบราวเซอร์สไตล์อ�
 
 ## 💻 พัฒนาโดยใช้ภาษา
 <br />
-[![My Skills](https://skillicons.dev/icons?i=html,css,ts)](https://skillicons.dev)
+<a href="https://skillicons.dev">
+  <img src="https://skillicons.dev/icons?i=html,css,ts" alt="My Skills" />
+</a>
 <br />
 <br />
 
 ## 🎨 Framework & Styling
 <br />
-[![My Skills](https://skillicons.dev/icons?i=nextjs,react,tailwind)](https://skillicons.dev)
+<a href="https://skillicons.dev">
+  <img src="https://skillicons.dev/icons?i=nextjs,react,tailwind" alt="My Skills" />
+</a>
 <br />
 <br />
 
 ## ⚙️ Backend & Database
 <br />
-[![My Skills](https://skillicons.dev/icons?i=supabase,postgres)](https://skillicons.dev)
+<a href="https://skillicons.dev">
+  <img src="https://skillicons.dev/icons?i=supabase,postgres" alt="My Skills" />
+</a>
 <hr>
 
 *🔗 Link to website* : https://goofy-bird.vercel.app/
