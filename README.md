@@ -43,12 +43,6 @@ Goofy Bird! เกมเว็บบราวเซอร์สไตล์อ�
 [![My Skills](https://skillicons.dev/icons?i=supabase,postgres)](https://skillicons.dev)
 <hr>
 
-*🔗 Link to website* : [ใส่ลิงก์ Vercel หรือ Netlify ของบอสตรงนี้]
+*🔗 Link to website* : https://goofy-bird.vercel.app/
 
-## 🚀 Deploy
 
-สามารถ Deploy โปรเจกต์นี้ได้อย่างง่ายดายผ่านแพลตฟอร์มอย่าง **Vercel** (แนะนำสำหรับ Next.js) หรือ **Netlify** โดยอย่าลืมตั้งค่า Environment Variables (`.env.local`) สำหรับเชื่อมต่อกับ Supabase ดังนี้:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
