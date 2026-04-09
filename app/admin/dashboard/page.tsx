@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Bird, Map as MapIcon, Users, Package, ArrowUpRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-// 📖 Dictionary สำหรับเนื้อหาในหน้า Page
+// Dictionary สำหรับเนื้อหาในหน้า Page
 const contentTranslations = {
   EN: {
     welcome: "WELCOME BACK,",
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
   const [lang, setLang] = useState<'EN' | 'TH'>('EN')
   const [stats, setStats] = useState({ characters: 0, maps: 0, players: 0, items: 0 })
 
-  // 🔄 1. ระบบดักจับการเปลี่ยนภาษาจากปุ่มใน Layout
+  // ระบบดักจับการเปลี่ยนภาษาจากปุ่มใน Layout
   useEffect(() => {
     const updateLang = () => {
       const savedLang = localStorage.getItem('appLang') as 'EN' | 'TH'
@@ -52,7 +52,6 @@ export default function AdminDashboardPage() {
     updateLang() // เช็คตอนโหลดหน้าครั้งแรก
     window.addEventListener('storage', updateLang) // ดักจับตอนกดปุ่มใน Layout
     
-    // พิเศษ: สร้าง Interval เช็คสั้นๆ เพื่อให้การเปลี่ยนดู Real-time ขึ้น
     const interval = setInterval(updateLang, 500)
     
     return () => {
@@ -61,7 +60,7 @@ export default function AdminDashboardPage() {
     }
   }, [])
 
-  // 📊 2. ดึงข้อมูลสถิติจริงจาก Supabase
+  // ดึงข้อมูลสถิติ
   useEffect(() => {
     const fetchStats = async () => {
       const { count: c } = await supabase.from('characters').select('*', { count: 'exact', head: true })
@@ -84,7 +83,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-10">
-      {/* 👋 Welcome Header (แปลครบแล้วครับบอส!) */}
+      {/* Welcome Header */}
       <div>
         <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tight">
           {t.welcome} <span className="text-blue-600">Boss!</span>
@@ -94,7 +93,7 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      {/* 📈 Stat Cards Row */}
+      {/* Stat Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card, index) => (
           <motion.div
@@ -116,7 +115,7 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* 🚀 Actions & Tips Section */}
+      {/* Actions & Tips Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white border-2 border-slate-100 p-10 rounded-[3em] shadow-sm">
           <h3 className="text-xl font-black text-slate-800 mb-8 uppercase italic">{t.quick_shortcuts}</h3>
@@ -141,7 +140,7 @@ export default function AdminDashboardPage() {
                Goofy Bird Engine v1.0
              </div>
           </div>
-          {/* ตกแต่ง Background ทิป */}
+          {/* Background ทิป */}
           <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
         </div>
       </div>

@@ -13,7 +13,7 @@ export default function SuccessModal({ isOpen, onClose, secretCode }: SuccessMod
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-          {/* พื้นหลังมืดๆ เบลอๆ */}
+          {/* พื้นหลังเบลอๆ */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
@@ -28,7 +28,7 @@ export default function SuccessModal({ isOpen, onClose, secretCode }: SuccessMod
             transition={{ type: "spring", damping: 15 }}
             className="relative bg-white w-full max-w-[24em] rounded-[3em] border-[8px] border-[#4ECB71] shadow-[0_15px_0_rgba(0,0,0,0.1)] p-10 text-center"
           >
-            {/* ไอคอนติ๊กถูกพร้อมวงกลมเด้งๆ */}
+            {/* ไอคอนติ๊กถูก */}
             <motion.div 
               initial={{ scale: 0 }} animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}

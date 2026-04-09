@@ -32,13 +32,13 @@ export default function AdminMapsPage() {
   const [hasHazard, setHasHazard] = useState(false)
   const [isActive, setIsActive] = useState(true)
   
-  // ✅ เปลี่ยน State ให้เก็บเป็น Object แยก 3 ระดับ
+  // เปลี่ยน State ให้เก็บเป็น Object แยก 3 ระดับ
   const [allowedObstacles, setAllowedObstacles] = useState<Record<Difficulty, string[]>>({
     easy: ['pipe-top', 'pipe-bottom'],
     normal: ['pipe-top', 'pipe-bottom'],
     hard: ['pipe-top', 'pipe-bottom']
   })
-  // ✅ State สำหรับควบคุม Tab ในหน้าต่าง Edit
+  // State สำหรับควบคุม Tab ในหน้าต่าง Edit
   const [activeDiffTab, setActiveDiffTab] = useState<Difficulty>('normal')
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function AdminMapsPage() {
       setHasHazard(mapData.has_hazard || false)
       setIsActive(mapData.is_active ?? true)
       
-      // ✅ ดักข้อมูลเก่า (เผื่อ Database เคยเก็บเป็น Array) ให้แปลงเป็นโครงสร้างใหม่
+      // ดักข้อมูลเก่า 
       let obsData = mapData.allowed_obstacles;
       if (Array.isArray(obsData)) {
          setAllowedObstacles({ easy: obsData, normal: obsData, hard: obsData });
@@ -128,7 +128,7 @@ export default function AdminMapsPage() {
   const handleSaveMap = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // ✅ เช็คว่าแต่ละระดับต้องมีอย่างน้อย 1 อุปสรรค
+    // เช็คว่าแต่ละระดับต้องมีอย่างน้อย 1 อุปสรรค
     if (allowedObstacles.easy.length === 0 || allowedObstacles.normal.length === 0 || allowedObstacles.hard.length === 0) {
       alert("Please select at least 1 obstacle for EACH difficulty level.");
       return;
@@ -224,7 +224,7 @@ export default function AdminMapsPage() {
                   </div>
                 </div>
 
-                {/* ✅ โซนเลือกอุปสรรคแบบมี Tabs แบ่งตามความยาก */}
+                {/* โซนเลือกอุปสรรคแบบมี Tabs แบ่งตามความยาก */}
                 <div className="bg-slate-50 p-4 rounded-xl border-2 border-slate-200">
                   <label className="block text-slate-800 font-black uppercase tracking-widest text-sm mb-3 flex items-center gap-2">
                     <Package size={18} className="text-[#35A7FF]"/> Obstacles Settings

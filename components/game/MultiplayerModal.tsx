@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Users, Lock, Unlock, Play, CheckCircle2, ArrowLeft, Search, LogIn, Swords, Globe, MapIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, Users, Lock, Unlock, Play, CheckCircle2, ArrowLeft, Search, LogIn, Swords, Globe, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useSFX } from '@/hook/useSFX'
 import { useRouter } from 'next/navigation'
@@ -20,25 +20,25 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
   const [view, setView] = useState<ViewState>('menu')
   const [loading, setLoading] = useState(false)
 
-  // 🟢 Create Room States
+  // Create Room States
   const [maxPlayers, setMaxPlayers] = useState(4)
   const [isPrivate, setIsPrivate] = useState(false)
   const [difficulty, setDifficulty] = useState('normal')
   
-  // ✅ เปลี่ยนมาใช้ State แบบ Index (เพื่อทำปุ่ม ซ้าย-ขวา)
+  // เปลี่ยนมาใช้ State แบบ Index 
   const [maps, setMaps] = useState<any[]>([])
   const [currentMapIndex, setCurrentMapIndex] = useState(0)
 
-  // 🔵 Join Room States
+  // Join Room States
   const [availableRooms, setAvailableRooms] = useState<any[]>([])
   const [joinCode, setJoinCode] = useState('')
   
-  // 🔐 Password Modal States
+  // Password Modal States
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [privateRoomTarget, setPrivateRoomTarget] = useState<{id: string, code: string} | null>(null)
   const [privateCodeInput, setPrivateCodeInput] = useState('')
 
-  // 🟡 Lobby States
+  // Lobby States
   const [currentRoom, setCurrentRoom] = useState<any>(null)
   const [players, setPlayers] = useState<any[]>([])
   const [isReady, setIsReady] = useState(false)
@@ -109,7 +109,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
     if (data) setPlayers(data)
   }
 
-  // ✅ ฟังก์ชันเลื่อนด่าน ซ้าย-ขวา
+  // ฟังก์ชันเลื่อนด่าน ซ้าย-ขวา
   const handlePrevMap = () => {
     playHover()
     setCurrentMapIndex((prev) => (prev === 0 ? maps.length - 1 : prev - 1))
@@ -269,7 +269,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { if(view !== 'lobby') { playBack(); onClose(); } }} className="absolute inset-0 bg-black/80" />
 
-          {/* ✅ จำกัดความสูง max-h ไว้ที่ 90vh ป้องกันการล้นจอ */}
+          {/* จำกัดความสูง max-h ไว้ที่ 90vh ป้องกันการล้นจอ */}
           <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} 
           className="relative bg-[#F8FAFC] w-full max-w-3xl rounded-[2.5em] sm:rounded-[3em] shadow-2xl p-4 sm:p-6  border-[6px] border-white flex flex-col max-h-[90vh] overflow-hidden">
             
@@ -319,7 +319,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
                 
                 <h2 className="text-2xl sm:text-4xl font-black text-[#35A7FF] uppercase italic tracking-tighter mb-3 sm:mb-4 text-center shrink-0">Room Settings</h2>
                 
-                {/* ✅ โซนตั้งค่า ที่สามารถเลื่อน (Scroll) ได้ถ้ายาวเกินจอ */}
+                {/* โซนตั้งค่า */}
                 <div className="flex-1 space-y-3 sm:space-y-4 bg-white p-3 sm:p-6  rounded-2xl sm:rounded-[2em] border-2 border-slate-100 shadow-sm overflow-y-auto custom-scrollbar pr-2 min-h-0">
                   
                   {/* 🗺️ ระบบเลือกด่านแบบลูกศร ซ้าย-ขวา */}
@@ -359,7 +359,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
                     )}
                   </div>
 
-                  {/* 🎚️ โซนตั้งค่าอื่นๆ (ปรับให้เล็กลง กระชับขึ้น) */}
+                  {/* โซนตั้งค่าอื่นๆ */}
                   <div>
                     <label className="block text-slate-400 font-bold uppercase tracking-widest text-[9px] sm:text-xs mb-1.5 sm:mb-2">Difficulty</label>
                     <div className="flex gap-2">
@@ -393,7 +393,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
                   </div>
                 </div>
 
-                {/* ✅ ปุ่ม Create Room ถูกย้ายออกมานอก Scroll โซน ทำให้มันลอยอยู่ด้านล่างเสมอ ไม่มีวันตกขอบ */}
+                {/* ปุ่ม Create Room */}
                 <div className="shrink-0 mt-3 sm:mt-4 mb-2">
                   <button onClick={() => { playClick(); handleCreateRoom()}} onMouseEnter={playHover} disabled={loading || maps.length === 0} className="w-full bg-[#FF5F5F] hover:bg-[#ff4d4d] text-white py-3 sm:py-4 rounded-full font-black text-sm sm:text-lg uppercase tracking-widest shadow-[0_4px_0_#D14848] active:translate-y-1 active:shadow-none disabled:opacity-50 transition-all cursor-pointer">
                     {loading ? 'Creating...' : 'Create Room'}
@@ -443,7 +443,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
               </div>
             )}
 
-            {/* --- VIEW: LOBBY --- (ลบ padding ยืดเยื้อออก) */}
+            {/* --- VIEW: LOBBY ---  */}
             {view === 'lobby' && currentRoom && (
               <div className="flex flex-col h-full flex-1 z-10 overflow-hidden">
                 <div className="flex justify-between items-center mb-3 sm:mb-4 shrink-0">
@@ -504,7 +504,7 @@ export default function MultiplayerModal({ isOpen, onClose, currentUser }: Multi
               </div>
             )}
 
-            {/* 🔐 Password Modal */}
+            {/* Password Modal */}
             <AnimatePresence>
               {showPasswordModal && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 rounded-[2.5em] sm:rounded-[3em]">

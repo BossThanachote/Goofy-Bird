@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '@/lib/supabase' // 1. อย่าลืม import supabase client
+import { supabase } from '@/lib/supabase' 
 import SuccessModal from './SuccessModal'
 import { useSFX } from '@/hook/useSFX'
 
@@ -12,24 +12,24 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const initialFormState = {
-    email: '', // 2. แนะนำให้ใช้ email ในการ login ผ่าน Auth จะง่ายที่สุดครับ
+    email: '', 
     password: ''
   }
 
   const [formData, setFormData] = useState(initialFormState)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false) // เพิ่มสถานะโหลด
+  const [loading, setLoading] = useState(false) 
   const [isSuccessOpen, setIsSuccessOpen] = useState(false)
-  const { playHover, playClick } = useSFX() // ใช้เสียงจาก Hook ได้เลยครับ
+  const { playHover, playClick } = useSFX() 
 
 
-  // ✅ 1. ฟังก์ชัน Login ด้วย Google
+  //  ฟังก์ชัน Login ด้วย Google
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin, // กลับมาที่ localhost:3000
+          redirectTo: window.location.origin, 
         }
       })
       if (error) throw error
@@ -60,7 +60,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setError('')
 
     try {
-      // 3. ใช้ Supabase Auth ในการล็อกอิน
+      // ใช้ Supabase Auth ในการล็อกอิน
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -68,11 +68,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       if (authError) throw authError
 
-         setIsSuccessOpen(true); // ✅ เปิด Modal แจ้งเตือนแทนการใช้ alert
-      // ถ้าผ่าน ระบบจะเก็บ session ให้อัตโนมัติ
+         setIsSuccessOpen(true); // Modal 
+    
 
     } catch (err: any) {
-      // แสดง error เช่น "Invalid login credentials"
       setError(err.message.toUpperCase())
     } finally {
       setLoading(false)
@@ -115,7 +114,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </h2>
 
               <div className="space-y-3 sm:space-y-4 px-1 sm:px-2 mb-6 sm:mb-8">
-                {/* ✅ ผูกฟังก์ชัน Google */}
+                {/* ผูกฟังก์ชัน Google */}
                 <button 
                   onClick={() => {
                     playClick()
@@ -148,7 +147,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 px-1 sm:px-2">
-                {/* เปลี่ยนเป็น type="email" และ name="email" ให้ตรงกับ Auth */}
+                {/* Auth */}
                 <input name="email" type="email" placeholder="EMAIL ADDRESS" value={formData.email} onChange={handleInputChange} className="w-full bg-[#F5FBFF] border-[3px] sm:border-[4px] border-[#35A7FF] py-3 sm:py-4 px-6 sm:px-8 rounded-full text-black font-bold text-sm sm:text-base focus:outline-none" />
                 <input name="password" type="password" placeholder="PASSWORD" value={formData.password} onChange={handleInputChange} className="w-full bg-[#F5FBFF] border-[3px] sm:border-[4px] border-[#35A7FF] py-3 sm:py-4 px-6 sm:px-8 rounded-full text-black font-bold text-sm sm:text-base focus:outline-none" />
 
@@ -188,7 +187,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         isOpen={isSuccessOpen} 
         onClose={() => {
           setIsSuccessOpen(false)
-          handleClose() // ปิดหน้า Login พร้อมกัน
+          handleClose() 
         }}
         secretCode="WELCOME BACK!"
         />

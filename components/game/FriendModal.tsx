@@ -147,7 +147,7 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
             className="absolute inset-0 bg-black/70"
           />
 
-          {/* ✅ 1. ปรับขนาดกรอบ Modal ให้เหมาะกับจอมือถือ (ลด padding และ border) */}
+          {/* ปรับขนาดกรอบ Modal ให้เหมาะกับจอมือถือ */}
           <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} 
           className="relative bg-[#F8FAFC] w-full max-w-2xl rounded-[2em] sm:rounded-[3em] shadow-2xl p-4 sm:p-8 border-[4px] sm:border-[6px] border-[#35A7FF] flex flex-col max-h-[85vh]">
 
@@ -161,14 +161,14 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
               <X size={20} className="sm:w-6 sm:h-6" />
             </button>
 
-            {/* ✅ 2. ปรับขนาด Header */}
+            {/* ปรับขนาด Header */}
             <div className="text-center mb-4 sm:mb-6 mt-2 sm:mt-0">
               <h2 className="text-2xl sm:text-4xl font-black text-[#35A7FF] uppercase italic tracking-tighter drop-shadow-sm flex items-center justify-center gap-2 sm:gap-3">
                 <Users size={28} className="sm:w-9 sm:h-9" /> Social Hub
               </h2>
             </div>
 
-            {/* ✅ 3. ปรับขนาด Tabs ย่อคำบนมือถือให้ไม่เบียด */}
+            {/* ปรับขนาด Tabs ย่อคำบนมือถือให้ไม่เบียด */}
             <div className="flex justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 bg-slate-100 p-1 sm:p-2 rounded-full border-2 border-slate-200 shrink-0">
               <button onClick={() => { playClick(); setActiveTab('list'); }} 
               className={`flex-1 py-2 sm:py-3 rounded-full font-black text-[9px] sm:text-xs uppercase transition-all flex items-center justify-center gap-1 sm:gap-2 ${activeTab === 'list' ? 'bg-[#35A7FF] text-white shadow-md' : 'text-slate-400 hover:bg-slate-200 cursor-pointer'}`}>
@@ -187,7 +187,7 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
 
             <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 custom-scrollbar bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-4 border-2 border-slate-100 min-h-[50vh] sm:min-h-[300px]">
 
-              {/* --- TAB: MY FRIENDS --- */}
+              {/*  TAB MY FRIENDS */}
               {activeTab === 'list' && (
                 <div className="space-y-2 sm:space-y-3">
                   {friendsList.length === 0 ? (
@@ -226,7 +226,7 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
                 </div>
               )}
 
-              {/* --- TAB: ADD FRIEND --- */}
+              {/*TAB: ADD FRIEND*/}
               {activeTab === 'add' && (
                 <div>
                   <form onSubmit={handleSearch} className="flex gap-1 sm:gap-2 mb-4 sm:mb-6">
@@ -282,7 +282,7 @@ export default function FriendModal({ isOpen, onClose, currentUser }: FriendModa
                 </div>
               )}
 
-              {/* --- TAB: REQUESTS --- */}
+              {/*TAB: REQUESTS*/}
               {activeTab === 'requests' && (
                 <div className="space-y-2 sm:space-y-3">
                   {requestsList.length === 0 ? (

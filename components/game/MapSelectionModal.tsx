@@ -77,18 +77,18 @@ export default function MapSelectionModal({ isOpen, onClose }: MapSelectionModal
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { playBack(); onClose(); }} className="absolute inset-0 bg-black/80" />
 
-          {/* ✅ ล็อค max-h ไว้ที่ 85vh (มือถือ) และ 90vh (คอม) ป้องกันการล้นจอ */}
+       
           <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} 
           className="relative bg-[#F8FAFC] w-full max-w-2xl rounded-[2.5em] sm:rounded-[3em] shadow-2xl border-[4px] sm:border-[6px] border-[#35A7FF] flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden">
             
-            {/* ✅ ใช้โครงสร้างกล่องแบบใหม่ ควบคุมด้วย h-full และ flex-col ภายใน Padding */}
+          
             <div className="p-4 sm:p-6 md:p-8 flex flex-col h-full w-full overflow-hidden">
               
               <button onClick={() => { playBack(); onClose() }} onMouseEnter={playHover} className="absolute top-3 right-3 sm:top-6 sm:right-6 p-2 sm:p-3 bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full shadow-sm z-50 transition-all cursor-pointer">
                 <X size={20} className="sm:w-6 sm:h-6" />
               </button>
 
-              {/* 🌟 Header (ล็อคขนาดไม่ให้หด shrink-0) */}
+              {/* Header */ }
               <div className="text-center mb-4 sm:mb-6 mt-2 sm:mt-0 shrink-0">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-[#35A7FF] uppercase italic tracking-tighter drop-shadow-sm flex items-center justify-center gap-2 sm:gap-3 leading-none">
                   <MapIcon size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#35A7FF]" /> SETUP GAME
@@ -107,10 +107,10 @@ export default function MapSelectionModal({ isOpen, onClose }: MapSelectionModal
               ) : (
                 <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                   
-                  {/* 📜 โซนเนื้อหาที่เลื่อนได้ (Map + Difficulty) */}
+                  {/* โซนเนื้อหาที่เลื่อนได้ (Map + Difficulty) */}
                   <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 sm:pr-2 space-y-3 sm:space-y-4 pb-2">
                     
-                    {/* 🗺️ โซนเลือกด่าน */}
+                    {/* โซนเลือกด่าน */}
                     <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-[2em] border-2 border-slate-100 shadow-sm flex flex-col items-center">
                       <div className="flex items-center justify-between mb-3 w-full">
                         <button onClick={handlePrevMap} className="p-1.5 sm:p-3 bg-slate-100 hover:bg-[#35A7FF] text-slate-500 hover:text-white rounded-full transition-colors cursor-pointer active:scale-95 shrink-0">
@@ -141,7 +141,7 @@ export default function MapSelectionModal({ isOpen, onClose }: MapSelectionModal
                       </div>
                     </div>
 
-                    {/* 🎚️ โซนเลือกความยาก */}
+                    {/* โซนเลือกความยาก */}
                     <div className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-[2em] border-2 border-slate-100 shadow-sm">
                       <h3 className="text-center text-slate-400 font-bold uppercase tracking-widest text-[9px] sm:text-xs mb-2 sm:mb-3 leading-none">Select Difficulty</h3>
                       <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
@@ -160,7 +160,7 @@ export default function MapSelectionModal({ isOpen, onClose }: MapSelectionModal
                     </div>
                   </div>
 
-                  {/* 🚀 โซนปุ่มเริ่มเกม (ล็อคติดขอบล่างเสมอ shrink-0) */}
+                  {/* โซนปุ่มเริ่มเกม */}
                   <div className="shrink-0 pt-3 sm:pt-4 mb-3">
                     <button 
                       onClick={handlePlay} 

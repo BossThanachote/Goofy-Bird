@@ -127,7 +127,7 @@ export default function AdminSoundsPage() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file || !soundName || !actionTrigger) {
-      alert('กรุณากรอกข้อมูลให้ครบและเลือกไฟล์เสียงด้วยครับบอส!')
+      alert('Please fill all field')
       return
     }
 
@@ -164,7 +164,7 @@ export default function AdminSoundsPage() {
 
       if (insertError) throw insertError
 
-      alert('🎵 อัปโหลดเสียงขึ้นเซิร์ฟเวอร์เรียบร้อยครับบอส!')
+      alert('Uploaded Sound !')
       
       setSoundName('')
       setActionTrigger('')
@@ -191,7 +191,7 @@ export default function AdminSoundsPage() {
       if (error) throw error;
       fetchSounds(); 
     } catch (error: any) {
-      alert('ลบไม่สำเร็จครับบอส: ' + error.message);
+      alert('fail to delete: ' + error.message);
     }
   }
 
@@ -271,7 +271,7 @@ export default function AdminSoundsPage() {
           </form>
         </div>
 
-        {/* 🗃️ ฝั่งขวา: รายการเสียงที่มีในระบบ */}
+        {/* ฝั่งขวา: รายการเสียงที่มีในระบบ */}
         <div className="xl:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
           <h2 className="text-lg font-black text-slate-800 uppercase mb-6 flex items-center gap-2">
             <Music size={20} className="text-blue-500" /> Sound Library
@@ -282,7 +282,7 @@ export default function AdminSoundsPage() {
           ) : sounds.length === 0 ? (
             <div className="text-center text-slate-400 font-bold py-20">
               <div className="text-4xl mb-4 opacity-50">🎧</div>
-              ยังไม่มีไฟล์เสียงในระบบครับบอส!
+              Don't have a file !
             </div>
           ) : (
             <div className="space-y-4">
@@ -293,7 +293,7 @@ export default function AdminSoundsPage() {
                   className="flex flex-col xl:flex-row items-start xl:items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:border-blue-200 transition-all gap-4 group"
                 >
                   
-                  {/* 📝 1. ฝั่งซ้าย: ข้อมูลเพลง */}
+                  {/* ฝั่งซ้าย: ข้อมูลเพลง */}
                   <div className="flex flex-col overflow-hidden w-full xl:w-[25%] flex-shrink-0">
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className={`text-[9px] px-2 py-0.5 rounded-full font-black text-white uppercase tracking-wider flex-shrink-0 ${sound.category === 'MUSIC' ? 'bg-amber-400' : 'bg-rose-400'}`}>
@@ -306,7 +306,7 @@ export default function AdminSoundsPage() {
                     </code>
                   </div>
 
-                  {/* 🎵 2. ตรงกลาง: หลอดเพลง และ ที่ปรับ Base Volume */}
+                  {/* ตรงกลาง: หลอดเพลง และ ที่ปรับ Base Volume */}
                   <div className="w-full xl:flex-1 flex flex-col gap-2">
                     <CustomAudioPlayer 
                       url={sound.file_url} 
@@ -315,7 +315,7 @@ export default function AdminSoundsPage() {
                       baseVolume={sound.base_volume ?? 1.0}
                     />
                     
-                    {/* ✅ สไลเดอร์ปรับ Base Volume */}
+                    {/* สไลเดอร์ปรับ Base Volume */}
                     <div className="flex items-center gap-3 px-2">
                       <Volume2 size={14} className="text-slate-400 flex-shrink-0" />
                       <input 
@@ -331,7 +331,7 @@ export default function AdminSoundsPage() {
                     </div>
                   </div>
 
-                  {/* 📅 3. ฝั่งขวา: วันที่ สเตตัส และ ปุ่มลบ */}
+                  {/* ฝั่งขวา: วันที่ สเตตัส และ ปุ่มลบ */}
                   <div className="text-right flex flex-row xl:flex-col items-center xl:items-end justify-between w-full xl:w-auto gap-3 flex-shrink-0 xl:border-l border-slate-200 xl:pl-4">
                      <div className="flex xl:flex-col items-center xl:items-end gap-2">
                        <span className="text-[10px] font-bold text-slate-400 uppercase">

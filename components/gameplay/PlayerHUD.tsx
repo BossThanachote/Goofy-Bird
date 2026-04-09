@@ -14,7 +14,7 @@ export default function PlayerHUD({ score, hearts, gameState }: PlayerHUDProps) 
 
   return (
     <>
-      {/* 🏆 โซนคะแนนและป้ายคนดู */}
+      {/* โซนคะแนนและป้ายคนดู */}
       {showScore && (
         <div className="absolute top-10 w-full text-center z-50 pointer-events-none flex flex-col items-center">
           <h2 className="text-6xl md:text-8xl font-black text-white drop-shadow-[0_5px_0_rgba(0,0,0,0.3)] tracking-tighter" style={{ WebkitTextStroke: '2px #35A7FF' }}>
@@ -28,7 +28,7 @@ export default function PlayerHUD({ score, hearts, gameState }: PlayerHUDProps) 
         </div>
       )}
 
-      {/* ❤️ โซนหัวใจ 3 ดวง */}
+      {/* โซนหัวใจ 3 ดวง */}
       {showHearts && (
         <div className="absolute top-8 right-4 sm:right-8 z-50 flex gap-1 sm:gap-2">
           {[...Array(3)].map((_, i) => (

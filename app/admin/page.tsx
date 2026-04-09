@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
     setError('')
 
     try {
-      // 🔍 ตรวจสอบจากตาราง admin
+      // ตรวจสอบจากตาราง admin
       const { data, error: authError } = await supabase
         .from('admin')
         .select('*')
@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
       
-      {/* 🌌 Moving Background Loop */}
+      {/* Moving Background Loop */}
       <motion.div 
         initial={{ backgroundPosition: '0px 0px' }}
         animate={{ backgroundPosition: ['0px 0px', '1200px -1200px'] }}
@@ -51,15 +51,15 @@ export default function AdminLoginPage() {
         className="absolute inset-0 z-0 scale-110"
         style={{ 
           backgroundImage: "url('/backgroundadmingoofybird.jpg')",
-          backgroundSize: '600px 600px', // ปรับขนาดลวดลายให้พอดี
+          backgroundSize: '600px 600px', 
           filter: 'brightness(0.9)'
         }}
       />
 
-      {/* 🌫️ Overlay เพิ่มความอ่านง่าย */}
+      {/* Overlay */}
       <div className="absolute inset-0 bg-white/20  z-[1]" />
 
-      {/* 📦 Login Card */}
+      {/* Login Card */}
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

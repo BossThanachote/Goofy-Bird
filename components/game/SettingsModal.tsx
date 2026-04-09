@@ -121,14 +121,14 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
             className="absolute inset-0 bg-black/70"
           />
 
-          {/* ✅ ปรับความกว้าง, Padding และ Border ให้เล็กลงบนมือถือ */}
+          {/* ปรับความกว้าง, Padding และ Border ให้เล็กลงบนมือถือ */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             className="relative bg-gradient-to-b from-[#E0C3FC] to-[#8EC5FC] w-full max-w-[32em] rounded-[2.5em] sm:rounded-[3em] border-[4px] sm:border-[8px] border-white p-5 sm:p-10 shadow-2xl overflow-y-auto min-h-[60vh] sm:min-h-[70vh] md:min-h-[700px] max-h-[90vh] scrollbar-hide flex flex-col"
           >
-            {/* ✅ ปรับปุ่มกากบาท */}
+            {/* ปรับปุ่มกากบาท */}
             <button onClick={() => {
               playBack()
               handleClose()
@@ -136,10 +136,10 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
               onMouseEnter={playHover}
               className="absolute right-3 top-3 sm:right-4 sm:top-4 bg-[#FF5F5F] text-white w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 sm:border-4 border-white shadow-lg hover:scale-110 transition-transform font-bold text-lg sm:text-2xl z-50 cursor-pointer">✕</button>
 
-            {/* ✅ ปรับขนาด Header */}
+            {/* ปรับขนาด Header */}
             <h2 className="text-3xl sm:text-5xl font-black text-[#35A7FF] mb-4 sm:mb-8 uppercase tracking-tighter drop-shadow-[0_2px_0_white] text-center leading-none mt-2 sm:mt-0">Settings</h2>
 
-            {/* ✅ ปรับขนาดกล่อง Tabs และ Font ภายใน */}
+            {/* ปรับขนาดกล่อง Tabs และ Font ภายใน */}
             <div className="flex justify-between gap-1 sm:gap-2 mb-4 sm:mb-8 bg-black/10 p-1 sm:p-2 rounded-full shrink-0">
               {['Controls', 'Sound', 'Account'].map((tab) => (
                 <button
@@ -158,14 +158,14 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
             </div>
 
             <div className="flex-1 flex flex-col">
-              {/* 🟢 หน้าต่าง ACCOUNT */}
+              {/* หน้าต่าง ACCOUNT */}
               {activeTab === 'Account' && (
                 <div className="space-y-3 sm:space-y-4 text-left flex-1 flex flex-col">
                   {loading ? (
                     <div className="h-full flex items-center justify-center font-black text-[#35A7FF] animate-pulse italic text-sm sm:text-base">LOADING...</div>
                   ) : (
                     <>
-                      {/* ✅ ปรับกล่องข้อมูลแต่ละอันให้บางลง ตัวหนังสือเล็กลง */}
+                      {/* กล่องข้อมูล*/}
                       <div className="flex items-center justify-between bg-white/80 p-3 sm:p-4 rounded-[1.5em] sm:rounded-[2em] border-2 border-[#35A7FF]/30 min-h-[50px] sm:min-h-[72px]">
                         <span className="font-black text-[#35A7FF] text-xs sm:text-base">User Name</span>
                         {isEditing ? (
@@ -237,7 +237,7 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                 </div>
               )}
 
-              {/* 🟢 หน้าต่าง SOUND */}
+              {/*  หน้าต่าง SOUND */}
               {activeTab === 'Sound' && (
                 <div className="space-y-4 sm:space-y-6 text-left flex-1 flex flex-col justify-center">
                   
@@ -278,7 +278,7 @@ export default function SettingsModal({ isOpen, onClose, onUpdateSuccess }: Sett
                 </div>
               )}
 
-              {/* 🟢 หน้าต่าง CONTROLS */}
+              {/* หน้าต่าง CONTROLS */}
               {activeTab === 'Controls' && (
                 <div className="flex-1 flex items-center justify-center text-white font-black text-xl sm:text-3xl opacity-50 italic uppercase tracking-widest drop-shadow-md">
                   Coming Soon...

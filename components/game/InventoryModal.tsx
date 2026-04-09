@@ -131,12 +131,12 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
             className="absolute inset-0 bg-black/70"
           />
 
-          {/* ✅ ปรับความกว้าง Modal และ Padding ให้เหมาะกับมือถือ */}
+          {/* ปรับความกว้าง Modal และ Padding ให้เหมาะกับมือถือ */}
           <motion.div
             initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }}
             className="relative bg-[#F8FAFC] w-full max-w-4xl rounded-[2em] sm:rounded-[3em] shadow-2xl p-4 sm:p-8 border-[4px] sm:border-[6px] border-white text-slate-800 flex flex-col max-h-[85vh]"
           >
-            {/* ✅ ปรับ Header ของ Modal */}
+            {/* ปรับ Header ของ Modal */}
             <div className="flex justify-between items-center mb-4 sm:mb-6">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-black text-[#35A7FF] uppercase italic tracking-tighter leading-none">My Inventory</h2>
@@ -160,7 +160,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
               <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse text-sm sm:text-base">Loading Inventory...</div>
             ) : (
               <div className="overflow-y-auto pr-1 sm:pr-2 custom-scrollbar flex-1 pb-4">
-                {/* ✅ จัด Grid เป็น 2 คอลัมน์บนมือถือ และช่องว่าง (gap) เล็กลง */}
+        
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
 
                   {inventory.map((bird) => {
@@ -172,12 +172,12 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                   
                         className={`group relative bg-white p-3 sm:p-6 rounded-2xl sm:rounded-[2.5em] border-2 ${isEquipped ? 'border-[#C7EF00]' : rarityConfig[bird.rarity]?.border || 'border-slate-100'} shadow-md sm:shadow-lg flex flex-col items-center transition-all overflow-hidden h-full`}
                       >
-                        {/* 🏷️ Rarity Badge */}
+                        {/* Rarity Badge */}
                         <div className={`absolute top-2 right-2 sm:top-4 sm:right-4 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black uppercase tracking-wider z-10 ${rarityConfig[bird.rarity]?.bg} ${rarityConfig[bird.rarity]?.color}`}>
                           {bird.rarity}
                         </div>
 
-                        {/* 📸 กรอบรูป ✅ ปรับ Margin และความมน */}
+                        {/* ปรับ Margin และความมน */}
                         <div className="relative w-full aspect-square bg-white rounded-xl sm:rounded-[2em] flex items-center justify-center overflow-hidden mb-3 sm:mb-6 mt-4 sm:mt-4">
                           {bird.image_url ? (
                             <img
@@ -189,7 +189,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                             <div className="text-3xl sm:text-5xl">🐦</div>
                           )}
 
-                          {/* 🛡️ ป้าย EQUIPPED ✅ ปรับขนาดตัวอักษร */}
+                          {/* ป้าย EQUIPPED ปรับขนาดตัวอักษร */}
                           {isEquipped && (
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="bg-[#C7EF00] text-slate-900 px-2 py-1 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl font-black text-[8px] sm:text-[11px] uppercase tracking-widest flex items-center gap-1 shadow-lg transform rotate-[-5deg]">
@@ -199,7 +199,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                           )}
                         </div>
 
-                        {/* 📝 รายละเอียดนก ✅ ใช้ flex-1 ดันเนื้อหาและข้อความยาวๆ ให้ตัดสวยๆ */}
+                        {/* รายละเอียดนก */}
                         <div className="text-center space-y-1 w-full px-1 sm:px-2 flex-1 flex flex-col justify-end">
                           <h3 className={`text-sm sm:text-xl font-black italic uppercase tracking-tighter truncate w-full ${rarityConfig[bird.rarity]?.color || 'text-slate-700'}`}>
                             {bird.character_name}
@@ -209,7 +209,7 @@ export default function InventoryModal({ isOpen, onClose, user }: InventoryModal
                           </p>
                         </div>
 
-                        {/* 🔘 ปุ่มกดสวมใส่ ✅ ทำให้กดง่ายขึ้นบนมือถือ */}
+                        {/* ปุ่มกดสวมใส่ */}
                         {!isEquipped && (
                           <div className="absolute inset-0 flex items-center justify-center bg-white/40 opacity-0 group-hover:opacity-100 sm:transition-opacity rounded-2xl sm:rounded-[2.5em] active:opacity-100 touch-none">
                             <button

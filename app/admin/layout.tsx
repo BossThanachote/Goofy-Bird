@@ -14,7 +14,6 @@ export default function AdminRootLayout({
 }) {
   return (
     <div className="antialiased overflow-x-hidden min-h-screen bg-slate-50">
-      {/* บอสสามารถใส่ Navbar ของแอดมินไว้ตรงนี้ในอนาคตได้ครับ */}
       <main>{children}</main>
     </div>
   )

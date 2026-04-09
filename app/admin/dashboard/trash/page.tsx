@@ -9,7 +9,7 @@ export default function TrashPage() {
   const [trashData, setTrashData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
 
-  // ✅ 1. เพิ่ม State สำหรับจัดการ Modal
+  // เพิ่ม State สำหรับจัดการ Modal
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     type: 'restore' | 'delete' | null;
@@ -48,7 +48,7 @@ export default function TrashPage() {
     }
   }
 
-  // ✅ 2. เปลี่ยนฟังก์ชันเรียกใช้งาน ให้ไปเปิด Modal แทนการใช้ Alert
+  // เปลี่ยนฟังก์ชันเรียกใช้งาน ให้ไปเปิด Modal 
   const triggerRestore = (id: string, name: string) => {
     setModalConfig({ isOpen: true, type: 'restore', id, name })
   }
@@ -57,7 +57,7 @@ export default function TrashPage() {
     setModalConfig({ isOpen: true, type: 'delete', id, name })
   }
 
-  // ✅ 3. ฟังก์ชันหลักที่จะทำงานเมื่อกดยืนยันใน Modal
+  // ฟังก์ชันหลักที่จะทำงานเมื่อกดยืนยันใน Modal
   const executeAction = async () => {
     if (!modalConfig.type) return
     setIsProcessing(true)
@@ -78,7 +78,7 @@ export default function TrashPage() {
           const characterId = modalConfig.id;
           const DEFAULT_BIRD_ID = 'e114c607-b017-4ea6-a306-8e5c0808092a'; // น้อง Gege
 
-          // 1. ดึงข้อมูลความแรร์มาคิดเงินคืน
+          // ดึงข้อมูลความแรร์มาคิดเงินคืน
           const { data: charData } = await supabaseAdmin.from('characters').select('rarity').eq('character_id', characterId).single();
           const rarity = charData?.rarity || 'Common';
           
@@ -88,14 +88,14 @@ export default function TrashPage() {
           else if (rarity === 'Epic') refundAmount = 10000;
           else if (rarity === 'Rare') refundAmount = 5000;
 
-          // 2. หาผู้เล่นที่มีนกตัวนี้
+          // หาผู้เล่นที่มีนกตัวนี้
           const { data: inventoryData } = await supabaseAdmin.from('inventory').select('user_id').eq('character_id', characterId);
 
           if (inventoryData && inventoryData.length > 0) {
             const userIds = inventoryData.map(inv => inv.user_id);
 
             for (const userId of userIds) {
-              // ดึงข้อมูลผู้เล่น (ใช้ชื่อคอลัมน์ user_point และ equipped_bird ตามจริง)
+              // ดึงข้อมูลผู้เล่น 
               const { data: userData } = await supabaseAdmin
                 .from('users')
                 .select('user_point, equipped_bird')
@@ -122,7 +122,7 @@ export default function TrashPage() {
                   }
                 }
 
-                // ✅ อัปเดตคืนเงินและเปลี่ยนนก (ใช้ชื่อคอลัมน์ที่บอสตั้งไว้)
+                // อัปเดตคืนเงินและเปลี่ยนนก
                 await supabaseAdmin.from('users').update({
                   user_point: (userData.user_point || 0) + refundAmount,
                   equipped_bird: nextBirdId
@@ -130,12 +130,12 @@ export default function TrashPage() {
               }
             }
 
-            // 3. ปลดล็อก Foreign Key โดยลบออกจาก Inventory ของทุกคน
+            // ปลดล็อก Foreign Key โดยลบออกจาก Inventory ของทุกคน
             await supabaseAdmin.from('inventory').delete().eq('character_id', characterId);
           }
         }
 
-        // 4. ลบออกจากตารางหลัก
+        // ลบออกจากตารางหลัก
         const { error } = await supabaseAdmin
           .from(activeTab)
           .delete()
@@ -182,7 +182,7 @@ export default function TrashPage() {
         <div className="flex flex-col items-center justify-center py-20 opacity-50">
           <Trash2 size={64} className="text-slate-300 mb-4" />
           <h3 className="text-xl font-black text-slate-400 uppercase italic">Trash is Empty</h3>
-          <p className="text-sm font-bold text-slate-400">ถังขยะว่างเปล่าครับบอส!</p>
+          <p className="text-sm font-bold text-slate-400">Bin is emtry !</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -234,11 +234,11 @@ export default function TrashPage() {
         </div>
       )}
 
-      {/* ✅ 4. โค้ดส่วนของ Modal สวยๆ */}
+      {/* โค้ดส่วนของ Modal สวยๆ */}
       <AnimatePresence>
         {modalConfig.isOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* พื้นหลังสีดำโปร่งแสง (ใช้แบบทึบๆ จะได้ไม่แลคแบบที่เคยเจอบน PC) */}
+            {/* พื้นหลังสีดำโปร่งแสง */}
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={closeModal}

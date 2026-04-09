@@ -25,7 +25,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [generatedCode, setGeneratedCode] = useState('')
   const { playHover, playClick } = useSFX()
 
-  // ✅ ฟังก์ชันตรวจสอบรูปแบบ Email ที่ถูกต้อง
+  // ฟังก์ชันตรวจสอบรูปแบบ Email 
   const validateEmail = (email: string) => {
     return String(email)
       .toLowerCase()
@@ -50,7 +50,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     e.preventDefault()
     setError('')
 
-    // 🛡️ 1. Validation เบื้องต้น
+    // Validation 
     if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('PLEASE FILL IN ALL FIELDS')
       return
@@ -69,7 +69,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     setLoading(true)
 
     try {
-      // 🎲 2. สุ่ม Tag 4 หลัก และเช็คว่าการจับคู่ ชื่อ+Tag นี้ซ้ำไหม
+      // สุ่ม Tag 4 หลัก 
       let randomTag = Math.floor(1000 + Math.random() * 9000).toString()
       let isUnique = false
 
@@ -82,20 +82,20 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           .maybeSingle()
 
         if (!existingUser) {
-          isUnique = true // รอด! ไม่มีคนใช้ชื่อและ Tag คู่นี้
+          isUnique = true 
         } else {
           randomTag = Math.floor(1000 + Math.random() * 9000).toString() // สุ่มใหม่ถ้าแจ็คพอตไปซ้ำคนอื่น
         }
       }
 
-      // 🚀 3. สมัครสมาชิกผ่าน Supabase Auth (แนบ user_tag ไปกับ metadata ด้วย)
+      // สมัครสมาชิก
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             display_name: formData.username,
-            user_tag: randomTag // ส่งข้อมูลนี้เผื่อ Trigger หลังบ้านเอาไปใช้ได้
+            user_tag: randomTag 
           }
         }
       })
@@ -109,7 +109,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         return
       }
 
-      // 🔄 4. รอ Trigger หลังบ้านสร้าง Profile ให้เสร็จ
+      // Trigger หลังบ้านสร้าง Profile 
       let retryCount = 0
       let profileData = null
 
@@ -128,7 +128,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         }
       }
 
-      // ✅ 5. อัปเดต user_tag ลง Database (ในกรณีที่ Trigger สมัครสมาชิกไม่ได้จัดการให้)
+      // อัปเดต user_tag ลง Database 
       if (profileData && !profileData.user_tag) {
         await supabase
           .from('users')

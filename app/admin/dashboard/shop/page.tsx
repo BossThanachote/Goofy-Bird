@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Store, Edit3, X, Eye, EyeOff, Coins, Tag } from 'lucide-react'
+import { Store , X, Eye, EyeOff, Coins, Tag } from 'lucide-react'
 import { supabaseAdmin } from '@/lib/supabase'
 
 const rarityConfig: any = {

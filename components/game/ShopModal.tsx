@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Coins, Store, ShoppingCart, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { X, Coins, Store, ShoppingCart, CheckCircle, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useSFX } from '@/hook/useSFX'
 
@@ -63,7 +63,7 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
     try {
       const { data, error } = await supabase
         .from('characters')
-        .select('*')
+        .select('*')                        
         .eq('is_deleted', false)
         .eq('is_for_sale', true)
 
@@ -165,7 +165,7 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
       <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* ✅ 1. เพิ่ม min-h-[75vh] md:min-h-[700px] เข้าไปเพื่อล็อคความสูงหน้าต่างหลัก */}
+    
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} className="relative bg-[#F8FAFC] w-full max-w-5xl rounded-[3em] shadow-2xl p-6 md:p-8 border-[6px] border-[#FFD151] flex flex-col min-h-[75vh] md:min-h-[700px] max-h-[90vh]">
 
               <button 
@@ -178,7 +178,7 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
                 <X size={24} />
               </button>
 
-              {/* 🔝 Header & Tabs */}
+              {/* Header & Tabs */}
               <div className="flex flex-col xl:flex-row justify-between items-center mb-8 gap-6 pr-0 md:pr-16 pt-2">
                 <div>
                   <h2 className="text-3xl md:text-4xl font-black text-[#FFD151] [text-shadow:-2px_-2px_0_#000,2px_-2px_0_#000,-2px_2px_0_#000,2px_2px_0_#000] uppercase italic tracking-tighter drop-shadow-sm">Bird Shop</h2>
@@ -230,12 +230,12 @@ export default function ShopModal({ isOpen, onClose, user, onUpdatePoints }: Sho
                 </motion.div>
               )}
 
-              {/* 🦅 Shop Grid */}
+              {/* Shop Grid */}
               {loading ? (
-                // ✅ 2. เพิ่ม min-h-[300px] เผื่อไว้ดึงให้พื้นที่ตรงนี้กว้างรอเสมอ
+               
                 <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse min-h-[300px]">Stocking up the shop...</div>
               ) : displayItems.length === 0 ? (
-                // ✅ 3. เพิ่ม min-h-[300px] ในกล่อง Empty State เช่นกัน
+        
                 <div className="flex-1 flex items-center justify-center flex-col text-slate-400 opacity-50 min-h-[300px]">
                   <Store size={64} className="mb-4" />
                   <p className="font-black uppercase tracking-widest">No birds available in this category</p>

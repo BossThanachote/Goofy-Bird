@@ -9,7 +9,7 @@ import MultiplayerModal from '@/components/game/MultiplayerModal'
 import SettingsModal from '@/components/game/SettingsModal'
 import InventoryModal from '@/components/game/InventoryModal'
 import { Fredoka } from 'next/font/google'
-import { supabase } from '@/lib/supabase' // ✅ เพิ่มการนำเข้า supabase
+import { supabase } from '@/lib/supabase' 
 import ShopModal from '@/components/game/ShopModal'
 import LeaderboardModal from '@/components/game/LeaderBoardModal'
 import FriendModal from '@/components/game/FriendModal'
@@ -36,7 +36,7 @@ export default function LandingPage() {
   const [isMultiplayerOpen, setIsMultiplayerOpen] = useState(false)
   const [isMapSelectionOpen, setIsMapSelectionOpen] = useState(false)
   
-  // ✅ เพิ่ม State สำหรับจัดการข้อมูลผู้เล่น
+  // State สำหรับจัดการข้อมูลผู้เล่น
   const [user, setUser] = useState<any>(null)
   const [username, setUsername] = useState('')
 
@@ -45,7 +45,7 @@ export default function LandingPage() {
     const handleResize = () => setWindowWidth(window.innerWidth)
     window.addEventListener('resize', handleResize)
 
-    // 🔍 เช็คสถานะการเข้าสู่ระบบครั้งแรก
+    // เช็คสถานะการเข้าสู่ระบบครั้งแรก
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
@@ -55,7 +55,7 @@ export default function LandingPage() {
     }
     checkUser()
 
-    // 📡 คอยฟังว่ามีการ Login หรือ Logout หรือไม่
+    // คอยฟังว่ามีการ Login หรือ Logout หรือไม่
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user)
@@ -63,30 +63,30 @@ export default function LandingPage() {
       } else {
         setUser(null)
         setUsername('')
-        setPoints(0) // Reset เงินเมื่อ Logout
+        setPoints(0) 
       }
     })
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      authListener.subscription.unsubscribe() // ป้องกัน Memory Leak
+      authListener.subscription.unsubscribe() 
     }
   }, [])
 
   const fetchUserData = async (userId: string) => {
     const { data, error } = await supabase
       .from('users')
-      .select('username, user_point') // ✅ ดึงทั้งชื่อและเงิน
+      .select('username, user_point') 
       .eq('user_id', userId)
       .single()
     
     if (data) {
       setUsername(data.username)
-      setPoints(data.user_point || 0) // ✅ อัปเดตเงินในหน้า UI
+      setPoints(data.user_point || 0) 
     }
   }
 
-  // ฟังก์ชันดึงชื่อใหม่แบบแมนนวล (เราจะส่งตัวนี้ไปให้ Modal)
+  
   const refreshUsername = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.user) {
@@ -97,7 +97,7 @@ export default function LandingPage() {
         .single()
       
       if (data) {
-        setUsername(data.username) // ✅ อัปเดตชื่อในหน้า Page ทันที
+        setUsername(data.username) 
         console.log("Page UI Updated with:", data.username)
       }
     }
@@ -131,10 +131,9 @@ export default function LandingPage() {
             <motion.button onClick={() => { setIsFriendModalOpen(true); playClick(); }} whileHover={{ scale: 1.1 }} onMouseEnter={playHover} className="text-4xl filter drop-shadow-md cursor-pointer">👥</motion.button>
           </div>
 
-          {/* 🔘 ส่วนเปลี่ยนปุ่ม Login/Register เป็น Hello ! */}
+          {/* ส่วนเปลี่ยนปุ่ม Login/Register เป็น Hello */}
           <div className="flex gap-3">
             {user ? (
-              // ✅ ถ้า Login แล้ว: โชว์ 👋 Hello ! [Username]
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -143,7 +142,7 @@ export default function LandingPage() {
                 👋 Hello ! <span className="font-black text-[#FF5F5F]">{username || 'Player'}</span>
               </motion.div>
             ) : (
-              // ❌ ถ้ายังไม่ได้ Login: โชว์ปุ่มเดิม
+    
               <>
                 <motion.button 
                   onClick={() => { setIsLoginOpen(true); playClick(); }}
@@ -168,7 +167,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* ... (ส่วนกลาง Logo และปุ่มต่างๆ เหมือนเดิมของบอส) ... */}
+
         <div className="flex-1 flex flex-col items-center w-full justify-center -mt-20 scale-[0.8] sm:scale-100 transition-transform">
           <motion.div
             initial={{ y: -10 }} animate={{ y: 10 }}

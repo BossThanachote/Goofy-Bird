@@ -56,7 +56,7 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
             className="absolute inset-0 bg-black/70"
           />
 
-          {/* ✅ ปรับกรอบ Modal ให้ขอบบางลงบนมือถือ */}
+          {/* ปรับกรอบ Modal ให้ขอบบางลงบนมือถือ */}
           <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20, opacity: 0 }} 
           className="relative bg-[#F8FAFC] w-full max-w-2xl rounded-[2.5em] sm:rounded-[3em] shadow-2xl p-4 sm:p-6 md:p-8 border-[4px] sm:border-[6px] border-[#FFD151] flex flex-col min-h-[60vh] sm:min-h-[70vh] md:min-h-[600px] max-h-[85vh]">
 
@@ -69,14 +69,14 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
                 <X size={20} className="sm:w-6 sm:h-6" />
             </button>
 
-            {/* Header ✅ ปรับขนาดตัวอักษรและระยะห่างบนมือถือ */}
+            {/* Header */}
             <div className="text-center mb-4 sm:mb-6 mt-2 sm:mt-0">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#FFD151] uppercase italic tracking-tighter drop-shadow-sm flex items-center justify-center gap-2 sm:gap-3 leading-none">
                 <Trophy size={28} className="sm:w-10 sm:h-10 text-[#FFD151]" /> Hall of Fame
               </h2>
             </div>
 
-            {/* Tabs ✅ ปรับขนาดปุ่มและตัวอักษร */}
+            {/* Tabs  */}
             <div className="flex justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 bg-slate-100 p-1 sm:p-2 rounded-full border-2 border-slate-200 shrink-0">
               {(['easy', 'normal', 'hard'] as Difficulty[]).map((tab) => (
                 <button
@@ -96,7 +96,7 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
               ))}
             </div>
 
-            {/* Leaderboard List ✅ ปรับ Padding ให้โปร่งขึ้นบนมือถือ */}
+            {/* Leaderboard List */}
             <div className="flex-1 flex flex-col overflow-y-auto pr-1 sm:pr-2 custom-scrollbar bg-white rounded-2xl sm:rounded-3xl p-2 border-2 border-slate-100 min-h-[30vh]">
               {loading ? (
                 <div className="flex-1 flex items-center justify-center text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs sm:text-base py-10">Loading Champions...</div>
@@ -112,26 +112,26 @@ export default function LeaderboardModal({ isOpen, onClose }: LeaderboardModalPr
                       <motion.div
                         initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}
                         key={index}
-                        // ✅ ลดขนาด Padding ในรายชื่อ
+                        // ลดขนาด Padding ในรายชื่อ
                         className={`flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 ${index === 0 ? 'bg-yellow-50 border-yellow-300 shadow-sm' :
                             index === 1 ? 'bg-slate-50 border-slate-300' :
                               index === 2 ? 'bg-orange-50 border-orange-300' : 'bg-white border-slate-100'
                           }`}
                       >
                         <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
-                          {/* ✅ ลดขนาดไอคอนลำดับ */}
+                          {/* ลดขนาดไอคอนลำดับ */}
                           <div className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full font-black text-sm sm:text-lg shrink-0 ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
                               index === 1 ? 'bg-slate-300 text-slate-700' :
                                 index === 2 ? 'bg-orange-400 text-orange-900' : 'bg-slate-100 text-slate-400'
                             }`}>
                             {index === 0 ? <Crown size={16} className="sm:w-5 sm:h-5"/> : index === 1 || index === 2 ? <Medal size={16} className="sm:w-5 sm:h-5"/> : `#${index + 1}`}
                           </div>
-                          {/* ✅ ลดขนาดชื่อและจัดการตัดคำถ้าชื่อยาวไป */}
+                          {/* ลดขนาดชื่อแ*/}
                           <span className={`font-black text-sm sm:text-lg uppercase italic truncate ${isTop3 ? 'text-slate-800' : 'text-slate-600'}`}>
                             {player.username || 'Unknown Player'}
                           </span>
                         </div>
-                        {/* ✅ ปรับขนาดคะแนน */}
+                        {/* ปรับขนาดคะแนน */}
                         <div className="font-black text-lg sm:text-2xl text-[#35A7FF] tracking-tighter shrink-0 ml-2">
                           {player[scoreCol]?.toLocaleString() || 0}
                         </div>

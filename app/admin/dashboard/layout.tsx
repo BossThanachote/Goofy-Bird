@@ -2,10 +2,8 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-// ✅ 1. เพิ่มไอคอน Music สำหรับเมนูเสียง
 import { Bird, Package, Map as MapIcon, Store, LogOut, ShieldCheck, Languages, Trash2, Music } from 'lucide-react'
 
-// 📖 2. เพิ่มคำแปล Sounds
 const translations = {
   EN: {
     system_status: 'System Online',
@@ -14,7 +12,7 @@ const translations = {
     items: 'Items',
     maps: 'Maps',
     shop: 'Shop',
-    sounds: 'Sounds', // 👈 เพิ่มตรงนี้
+    sounds: 'Sounds', 
     recycle_bin: 'Recycle Bin', 
     sign_out: 'Sign Out',
     admin_level: 'Super Admin'
@@ -26,7 +24,7 @@ const translations = {
     items: 'ไอเทม',
     maps: 'ด่าน/แผนที่',
     shop: 'ร้านค้า',
-    sounds: 'เสียง/เพลง', // 👈 เพิ่มตรงนี้
+    sounds: 'เสียง/เพลง', 
     recycle_bin: 'ถังขยะ', 
     sign_out: 'ออกจากระบบ',
     admin_level: 'ผู้ดูแลระบบสูงสุด'
@@ -44,18 +42,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const isAdmin = localStorage.getItem('isAdmin')
     if (isAdmin !== 'true') router.push('/admin')
 
-    // โหลดภาษาเริ่มต้น
     const savedLang = localStorage.getItem('appLang') as 'EN' | 'TH'
     if (savedLang) setLang(savedLang)
   }, [router])
 
-  // 📝 3. เพิ่มเมนู Sounds ลงใน Sidebar
+  //  เพิ่มเมนู Sounds ลงใน Sidebar
   const menuItems = [
     { id: 'characters', label: t.characters, path: '/admin/dashboard/characters', icon: <Bird size={20} /> },
     { id: 'items', label: t.items, path: '/admin/dashboard/items', icon: <Package size={20} /> },
     { id: 'maps', label: t.maps, path: '/admin/dashboard/maps', icon: <MapIcon size={20} /> },
     { id: 'shop', label: t.shop, path: '/admin/dashboard/shop', icon: <Store size={20} /> },
-    { id: 'sounds', label: t.sounds, path: '/admin/dashboard/sounds', icon: <Music size={20} /> }, // 👈 เพิ่มบรรทัดนี้ (ลิงก์ไปที่ /admin/sounds ที่เราเพิ่งสร้าง)
+    { id: 'sounds', label: t.sounds, path: '/admin/dashboard/sounds', icon: <Music size={20} /> }, 
     { id: 'trash', label: t.recycle_bin, path: '/admin/dashboard/trash', icon: <Trash2 size={20} /> }, 
   ]
 

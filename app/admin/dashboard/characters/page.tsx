@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bird, Plus, X, Upload, Edit2, Trash2, Filter, Search } from 'lucide-react' // ✅ เพิ่ม Edit2 icon
+import { Bird, Plus, X, Upload, Edit2, Trash2, Filter} from 'lucide-react' // ✅ เพิ่ม Edit2 icon
 import { supabaseAdmin } from '@/lib/supabase'
 
 const rarityConfig: any = {
@@ -11,7 +11,7 @@ const rarityConfig: any = {
   Legendary: { color: 'text-yellow-600', bg: 'bg-yellow-100', border: 'border-yellow-400' },
   Mystic: { color: 'bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-green-500 to-blue-500', bg: 'bg-slate-50', border: 'border-rainbow' }
 }
-// 🧮 กำหนดน้ำหนักให้ Rarity สำหรับใช้ตอน Sort (ค่าน้อย = อยู่บนสุด)
+// Rarity Sort (ค่าน้อย = อยู่บนสุด)
 const rarityWeight: any = {
   Mystic: 1,
   Legendary: 2,
@@ -44,8 +44,8 @@ export default function CharactersPage() {
     const { data, error } = await supabaseAdmin
       .from('characters')
       .select('*')
-      .eq('is_deleted', false) // ✅ ดึงเฉพาะตัวที่ยังไม่ถูกลบ (Soft Delete)
-      // .order('character_id', { ascending: false })
+      .eq('is_deleted', false) 
+      
 
     
     if (error) console.error("Error fetching:", error.message)
@@ -100,7 +100,7 @@ export default function CharactersPage() {
     }
   }
 
-  // ✏️ ฟังก์ชันอัปเดตนก (มาใหม่!)
+  // ฟังก์ชันอัปเดตนก 
   const handleUpdateCharacter = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -138,24 +138,23 @@ export default function CharactersPage() {
   }
 
   const handleDeleteCharacter = async (id: string, name: string) => {
-    // ❌ เอาการแจ้งเตือนกดยืนยันออกไปแล้ว กดปุ๊บทำงานทันที!
     setLoading(true)
     try {
       const { error } = await supabaseAdmin
         .from('characters')
-        .update({ is_deleted: true }) // ✅ เปลี่ยนสถานะเป็นถูกลบ
+        .update({ is_deleted: true }) // เปลี่ยนสถานะเป็นถูกลบ
         .eq('character_id', id)
 
       if (error) throw error
       
-      fetchCharacters() // รีเฟรชหน้าจอ นกตัวนั้นจะหายไป
+      fetchCharacters() 
     } catch (err: any) {
       alert("Error deleting: " + err.message)
     } finally {
       setLoading(false)
     }
   }
-  // 🟢 ฟังก์ชันเปิดหน้าแก้ไขพร้อมดึงข้อมูลเดิมมาใส่ฟอร์ม
+  // ฟังก์ชันเปิดหน้าแก้ไขพร้อมดึงข้อมูลเดิมมาใส่ฟอร์ม
   const openEditModal = (bird: any) => {
     setEditingBird(bird)
     setName(bird.character_name)
@@ -177,7 +176,7 @@ export default function CharactersPage() {
 
   return (
     <div className="space-y-8 px-4 md:px-10 py-6">
-      {/* 🔝 Top Bar */}
+      {/* Top Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-6 rounded-[2.5em] shadow-sm border-2 border-slate-50">
         <div className="flex items-center gap-4">
           <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl"><Bird size={28} /></div>
@@ -231,7 +230,7 @@ export default function CharactersPage() {
               className={`group relative bg-white p-6 rounded-[2.5em] border-2 ${rarityConfig[char.rarity]?.border} shadow-lg flex flex-col items-center transition-all hover:-translate-y-1`}
             >
 
-              {/* 🗑️ ปุ่มลบ (มุมบนขวา) */}
+              {/* ปุ่มลบ (มุมบนขวา) */}
               <button 
                 onClick={() => handleDeleteCharacter(char.character_id, char.character_name)}
                 className="absolute top-4 left-14 p-2 bg-white text-slate-400 hover:text-red-500 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-md border border-slate-100 z-10"
@@ -240,7 +239,7 @@ export default function CharactersPage() {
                 <Trash2 size={16} />
               </button>
 
-              {/* ✏️ ปุ่มแก้ไข (มุมบนซ้าย) */}
+              {/* ปุ่มแก้ไข (มุมบนซ้าย) */}
               <button 
                 onClick={() => openEditModal(char)}
                 className="absolute top-4 left-4 p-2 bg-white text-slate-400 hover:text-blue-600 rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-md border border-slate-100 z-10"
@@ -248,12 +247,12 @@ export default function CharactersPage() {
                 <Edit2 size={16} />
               </button>
 
-              {/* 🏷️ Rarity Badge */}
+              {/* Rarity Badge */}
               <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-wider ${rarityConfig[char.rarity]?.bg} ${rarityConfig[char.rarity]?.color}`}>
                 {char.rarity}
               </div>
 
-              {/* 📸 กรอบรูปทรงเหลี่ยมโค้ง (Clean UI) */}
+              {/* กรอบรูปทรงเหลี่ยมโค้ง */}
               <div className={`w-full aspect-square bg-white rounded-[2em] flex items-center justify-center overflow-hidden mb-6 mt-4`}>
                  {char.image_url && char.image_url.startsWith('http') ? (
                    <img src={char.image_url} className="w-full h-full object-contain p-4" alt={char.character_name} />
@@ -275,7 +274,7 @@ export default function CharactersPage() {
         </AnimatePresence>
       </div>
 
-      {/* ➕ Modal Add & Edit (รวมไว้ด้วยกัน ใช้ Component ร่วมกันได้เลย) */}
+      {/* Modal Add & Edit  */}
       <AnimatePresence>
         {(isAddModalOpen || isEditModalOpen) && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
