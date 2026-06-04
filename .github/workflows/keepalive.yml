@@ -1,0 +1,18 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # ตั้งค่าให้รันทุกๆ 3 วัน เวลาเที่ยงคืน (ตามเวลา UTC)
+    - cron: "0 0 */3 * *"
+  # ใส่คำสั่งนี้เพื่อให้เราสามารถกดปุ่ม Run เองจากหน้าเว็บ GitHub ได้เพื่อทดสอบ
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase API
+        run: |
+          curl -X GET "${{ secrets.SUPABASEURL }}/rest/v1/keep_alive?select=*" \
+          -H "apikey: ${{ secrets.SUPABASEKEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASEKEY }}"
